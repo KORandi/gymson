@@ -89,6 +89,10 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .ex-meta{display:flex;gap:12px;margin-top:6px;font-size:12px;color:var(--txt2);flex-wrap:wrap}
 .ex-note{font-size:12px;color:var(--txt2);margin-top:6px;font-style:italic;line-height:1.4;padding:6px 8px;background:var(--bg3);border-radius:6px}
 .ex-overload{font-size:11px;color:var(--ok);margin-top:4px;padding:4px 8px;background:#0a1a0a;border-radius:6px}
+.plate-info{font-size:11px;color:var(--txt2);margin-top:4px;padding:4px 8px;background:var(--bg3);border-radius:6px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.plate-info .pi-bar{color:var(--acc);font-weight:600}
+.plate-info .pi-plate{background:var(--bg);padding:1px 5px;border-radius:3px;border:1px solid var(--brd)}
+.wu-plates{font-size:10px;color:var(--txt2);margin-left:24px;margin-top:-2px;margin-bottom:2px}
 .warmup-toggle{font-size:12px;color:var(--txt2);margin-top:8px;padding:4px 0;cursor:pointer;user-select:none}
 .warmup-sets{display:none}
 .warmup-sets.open{display:block}
@@ -99,6 +103,7 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .set-input:focus{border-color:var(--acc)}
 .set-input.prefilled{color:var(--txt2)}
 .set-x{color:var(--txt2);font-size:13px}
+.set-unit{color:var(--txt2);font-size:12px;min-width:16px}
 .set-check{width:38px;height:38px;border-radius:50%;border:2px solid var(--brd);background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s}
 .set-check.done{background:var(--ok);border-color:var(--ok)}
 .set-check.done::after{content:'✓';color:#fff;font-size:16px}
@@ -961,16 +966,22 @@ function renderDay() {
     if (overload) html += `<div class="ex-overload">📈 ${overload}</div>`;
     // Warmup sets
     if (ex.warmup > 0) {
+      const wuWeights = getWarmupWeights(calcWeight, ex.warmup);
+      const wuReps = getWarmupReps(ex.warmup);
       html += `<div class="warmup-toggle" onclick="this.nextElementSibling.classList.toggle('open')">▸ ${ex.warmup} zahřívací ${ex.warmup === 1 ? 'série' : 'série'}</div>`;
       html += `<div class="warmup-sets">`;
       for (let s = 0; s < ex.warmup; s++) {
         const wuKey = `wu-${ei}-${s}`;
         const wuLog = log[wuKey] || {};
+        const wuPrefill = wuWeights[s] || '';
+        const wuRepPrefill = wuReps[s] || '';
         html += `<div class="set-row wu"><span class="set-label">Z${s + 1}</span>`;
-        html += `<input class="set-input" type="number" inputmode="decimal" placeholder="kg" step="2.5" value="${wuLog.w || ''}" data-key="${wuKey}" data-field="w" onchange="logSet(this)">`;
-        html += `<span class="set-x">×</span>`;
-        html += `<input class="set-input" type="number" inputmode="numeric" placeholder="reps" style="width:62px" value="${wuLog.r || ''}" data-key="${wuKey}" data-field="r" onchange="logSet(this)">`;
+        html += `<input class="set-input${!wuLog.w && wuPrefill ? ' prefilled' : ''}" type="number" inputmode="decimal" step="2.5" value="${wuLog.w || ''}" placeholder="${wuPrefill}" data-key="${wuKey}" data-field="w" onchange="logSet(this)" onfocus="if(!this.value&&${wuPrefill})this.value='${wuPrefill}'">`;
+        html += `<span class="set-unit">kg</span><span class="set-x">×</span>`;
+        html += `<input class="set-input" type="number" inputmode="numeric" style="width:62px" value="${wuLog.r || ''}" placeholder="${wuRepPrefill}" data-key="${wuKey}" data-field="r" onchange="logSet(this)" onfocus="if(!this.value&&${wuRepPrefill})this.value='${wuRepPrefill}'">`;
         html += `<div class="set-check${wuLog.done ? ' done' : ''}" data-key="${wuKey}" onclick="toggleWarmup(this)"></div></div>`;
+        const wuPlates = formatPlatesCompact(wuPrefill);
+        if (wuPlates) html += `<div class="wu-plates">↳ ${wuPlates} na stranu</div>`;
       }
       html += `</div>`;
     }
@@ -985,10 +996,13 @@ function renderDay() {
       const isLastSet = s === ex.working - 1;
       const skipTimer = isSSPair && isLastSet ? '1' : '0';
       html += `<div class="set-row"><span class="set-label">${s + 1}</span>`;
-      html += `<input class="set-input${!sLog.w && prefill ? ' prefilled' : ''}" type="number" inputmode="decimal" placeholder="kg" step="2.5" value="${sLog.w || ''}" data-key="${ei}-${s}" data-field="w" onchange="logSet(this)" onfocus="if(!this.value&&'${prefill}')this.value='${prefill}'" ${prefill && !sLog.w ? `placeholder="${prefill}"` : ''}>`;
-      html += `<span class="set-x">×</span>`;
+      html += `<input class="set-input${!sLog.w && prefill ? ' prefilled' : ''}" type="number" inputmode="decimal" step="2.5" value="${sLog.w || ''}" data-key="${ei}-${s}" data-field="w" onchange="logSet(this)" onfocus="if(!this.value&&'${prefill}')this.value='${prefill}'" ${prefill && !sLog.w ? `placeholder="${prefill}"` : ''}>`;
+      html += `<span class="set-unit">kg</span><span class="set-x">×</span>`;
       html += `<input class="set-input" type="number" inputmode="numeric" placeholder="${prefillR || ex.reps}" style="width:62px" value="${sLog.r || ''}" data-key="${ei}-${s}" data-field="r" onchange="logSet(this)" onfocus="if(!this.value&&'${prefillR}')this.value='${prefillR}'">`;
       html += `<div class="set-check${isDone ? ' done' : ''}" data-key="${ei}-${s}" data-skip-timer="${skipTimer}" onclick="toggleSet(this,'${ex.rest}','${ex.name}',${ei},${s})"></div></div>`;
+      const wsWeight = sLog.w || prefill;
+      const wsPlates = wsWeight ? formatPlatesCompact(parseFloat(wsWeight)) : '';
+      if (wsPlates) html += `<div class="wu-plates">↳ ${wsPlates} na stranu</div>`;
     }
     html += `</div>`;
   });
@@ -1010,6 +1024,70 @@ function renderDay() {
 }
 
 // ==================== WEIGHT CALC ====================
+function getWarmupWeights(calcWeight, numSets) {
+  if (!calcWeight || numSets <= 0) return [];
+  const working = parseFloat(String(calcWeight).split('-')[0]);
+  if (!working || working <= 20) return Array(numSets).fill('');
+  const bar = 20;
+  const weights = [];
+  for (let i = 0; i < numSets; i++) {
+    const pct = (i + 1) / (numSets + 1);
+    const w = bar + (working - bar) * pct;
+    weights.push(Math.round(w / 2.5) * 2.5);
+  }
+  return weights;
+}
+
+function getPlates(totalWeight) {
+  const bar = 20;
+  if (!totalWeight || totalWeight <= bar) return null;
+  let perSide = Math.round((totalWeight - bar) / 2 * 100) / 100;
+  const available = [25, 20, 15, 10, 5, 2.5, 1.25];
+  const plates = [];
+  for (const plate of available) {
+    while (perSide >= plate - 0.001) {
+      plates.push(plate);
+      perSide = Math.round((perSide - plate) * 100) / 100;
+    }
+  }
+  return { bar, plates };
+}
+
+function groupPlatesOrdered(plates) {
+  const seen = [];
+  const counts = {};
+  plates.forEach(p => {
+    if (!counts[p]) { counts[p] = 0; seen.push(p); }
+    counts[p]++;
+  });
+  return seen.map(p => ({ plate: p, count: counts[p] }));
+}
+
+function formatPlates(totalWeight) {
+  const info = getPlates(totalWeight);
+  if (!info) return '';
+  if (info.plates.length === 0) return `<span class="pi-bar">Osa ${info.bar} kg</span>`;
+  const grouped = groupPlatesOrdered(info.plates);
+  const parts = grouped.map(({ plate: p, count: c }) =>
+    `<span class="pi-plate">${c > 1 ? c + '× ' : ''}${p % 1 === 0 ? p : p}</span>`
+  );
+  return `<span class="pi-bar">Osa ${info.bar} kg</span> + ${parts.join(' + ')} <span style="opacity:.6">na stranu</span>`;
+}
+
+function formatPlatesCompact(totalWeight) {
+  const info = getPlates(totalWeight);
+  if (!info || info.plates.length === 0) return '';
+  const grouped = groupPlatesOrdered(info.plates);
+  return grouped.map(({ plate: p, count: c }) => (c > 1 ? c + '×' : '') + p).join(' + ');
+}
+
+function getWarmupReps(numSets) {
+  if (numSets >= 4) return [10, 5, 3, 2].concat(Array(numSets - 4).fill(2));
+  if (numSets === 3) return [8, 5, 3];
+  if (numSets === 2) return [5, 3];
+  return [5];
+}
+
 function getCalcWeight(ex) {
   if (!ex.pct) return null;
   const pcts = ex.pct.split('-').map(Number);
