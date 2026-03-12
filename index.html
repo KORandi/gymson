@@ -101,6 +101,14 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .set-check{width:38px;height:38px;border-radius:50%;border:2px solid var(--brd);background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s}
 .set-check.done{background:var(--ok);border-color:var(--ok)}
 .set-check.done::after{content:'✓';color:#fff;font-size:16px}
+.workout-progress{display:flex;align-items:center;gap:10px;padding:8px 16px;margin:0 0 4px}
+.workout-progress .wp-bar{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.workout-progress .wp-fill{height:100%;background:var(--acc);border-radius:3px;transition:width .3s}
+.workout-progress .wp-text{font-size:12px;color:var(--txt2);white-space:nowrap}
+.workout-done-msg{text-align:center;padding:20px;animation:fadeIn .4s}
+.workout-done-msg .wd-emoji{font-size:48px;margin-bottom:8px}
+.workout-done-msg .wd-text{font-family:'Barlow Condensed',sans-serif;font-size:22px;color:var(--ok)}
+.workout-done-msg .wd-sub{font-size:13px;color:var(--txt2);margin-top:4px}
 .complete-btn{margin:16px;padding:16px;background:var(--acc);color:#fff;border-radius:12px;font-size:18px;font-weight:700;font-family:'Barlow Condensed',sans-serif;width:calc(100% - 32px);letter-spacing:1px;transition:.2s}
 .complete-btn:hover{background:var(--acc2)}
 .complete-btn:disabled{opacity:.4}
@@ -180,9 +188,9 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 <h1 class="ob-title">POWERBUILDING SYSTEM</h1>
 <p class="ob-sub">11týdenní strukturovaný silový program</p>
 <p class="ob-sub">Jaká je tvoje zkušenostní úroveň?</p>
-<button class="ob-opt" onclick="obSetExp('beginner')">Začátečník <span class="ob-desc">méně než 1 rok</span></button>
-<button class="ob-opt" onclick="obSetExp('intermediate')">Středně pokročilý <span class="ob-desc">1–3 roky</span></button>
-<button class="ob-opt" onclick="obSetExp('advanced')">Pokročilý <span class="ob-desc">3+ let</span></button>
+<button class="ob-opt" onclick="obSetExp('beginner',this)">Začátečník <span class="ob-desc">méně než 1 rok</span></button>
+<button class="ob-opt" onclick="obSetExp('intermediate',this)">Středně pokročilý <span class="ob-desc">1–3 roky</span></button>
+<button class="ob-opt" onclick="obSetExp('advanced',this)">Pokročilý <span class="ob-desc">3+ let</span></button>
 <div id="ob-exp-warn" class="ob-warn2" style="display:none">⚠️ Tento program je určen pro středně pokročilé a pokročilé liftery. Jako začátečník bys měl/a zvážit jednodušší lineární program. Pokud chceš pokračovat, buď opatrný/á s váhami.</div>
 <button class="btn" id="ob1next" disabled onclick="obStep(2)">Pokračovat</button>
 </div>
@@ -190,9 +198,9 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 <div class="ob-step" id="ob2">
 <h1 class="ob-title">FREKVENCE</h1>
 <p class="ob-sub">Kolikrát týdně chceš trénovat?</p>
-<button class="ob-opt" onclick="obSetFreq('2x')">2× týdně <span class="ob-desc">Full Body kompromis (max 1h/trénink)</span></button>
-<button class="ob-opt" onclick="obSetFreq('4x')">4× týdně <span class="ob-desc">Upper/Lower + Full Body split</span></button>
-<button class="ob-opt" onclick="obSetFreq('5-6x')">5–6× týdně <span class="ob-desc">Full Body + Arm & Pump Day</span></button>
+<button class="ob-opt" onclick="obSetFreq('2x',this)">2× týdně <span class="ob-desc">Full Body kompromis (max 1h/trénink)</span></button>
+<button class="ob-opt" onclick="obSetFreq('4x',this)">4× týdně <span class="ob-desc">Upper/Lower + Full Body split</span></button>
+<button class="ob-opt" onclick="obSetFreq('5-6x',this)">5–6× týdně <span class="ob-desc">Full Body + Arm & Pump Day</span></button>
 <div id="ob-freq-warn" class="ob-warn" style="display:none">⚠️ 2× týdně není nejefektivnější cesta k maximálním výsledkům – věda jasně ukazuje, že vyšší frekvence a objem vedou k lepší hypertrofii i síle. Tato varianta je ale funkční kompromis pro ty, kdo mají omezený čas. Počítej s pomalejším progresem a zaměř se hlavně na konzistenci a progresivní přetížení.</div>
 <button class="btn" id="ob2next" disabled onclick="obStep(3)">Pokračovat</button>
 <button class="btn btn-ghost" onclick="obStep(1)">← Zpět</button>
@@ -201,9 +209,9 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 <div class="ob-step" id="ob3">
 <h1 class="ob-title">CÍL</h1>
 <p class="ob-sub">Na co se chceš zaměřit?</p>
-<button class="ob-opt" onclick="obSetGoal('strength')">Síla</button>
-<button class="ob-opt" onclick="obSetGoal('hypertrophy')">Hypertrofie</button>
-<button class="ob-opt" onclick="obSetGoal('both')">Obojí</button>
+<button class="ob-opt" onclick="obSetGoal('strength',this)">Síla</button>
+<button class="ob-opt" onclick="obSetGoal('hypertrophy',this)">Hypertrofie</button>
+<button class="ob-opt" onclick="obSetGoal('both',this)">Obojí</button>
 <button class="btn" id="ob3next" disabled onclick="obStep(4)">Pokračovat</button>
 <button class="btn btn-ghost" onclick="obStep(2)">← Zpět</button>
 </div>
@@ -211,10 +219,10 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 <div class="ob-step" id="ob4">
 <h1 class="ob-title">TVOJE 1RM</h1>
 <p class="ob-sub">Zadej svá aktuální (nebo odhadovaná) jednorázová maxima v kg. Z nich se vypočítají pracovní váhy.</p>
-<div class="ob-input-row"><label>Squat</label><input type="number" id="orm-sq" placeholder="0" min="0" step="2.5"><span>kg</span></div>
-<div class="ob-input-row"><label>Bench</label><input type="number" id="orm-bp" placeholder="0" min="0" step="2.5"><span>kg</span></div>
-<div class="ob-input-row"><label>Deadlift</label><input type="number" id="orm-dl" placeholder="0" min="0" step="2.5"><span>kg</span></div>
-<div class="ob-input-row"><label>OHP</label><input type="number" id="orm-ohp" placeholder="0" min="0" step="2.5"><span>kg</span></div>
+<div class="ob-input-row"><label>Squat</label><input type="number" inputmode="decimal" id="orm-sq" placeholder="0" min="0" step="2.5"><span>kg</span></div>
+<div class="ob-input-row"><label>Bench</label><input type="number" inputmode="decimal" id="orm-bp" placeholder="0" min="0" step="2.5"><span>kg</span></div>
+<div class="ob-input-row"><label>Deadlift</label><input type="number" inputmode="decimal" id="orm-dl" placeholder="0" min="0" step="2.5"><span>kg</span></div>
+<div class="ob-input-row"><label>OHP</label><input type="number" inputmode="decimal" id="orm-ohp" placeholder="0" min="0" step="2.5"><span>kg</span></div>
 <button class="btn" onclick="obFinish()">Začít program →</button>
 <button class="btn btn-ghost" onclick="obStep(3)">← Zpět</button>
 </div>
@@ -262,8 +270,8 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 <div class="set-section">
 <h3>🔢 1RM Kalkulačka</h3>
 <p style="font-size:12px;color:var(--txt2);margin-bottom:8px">Epley: 1RM = váha × (1 + repy/30)</p>
-<div class="set-field"><label>Váha (kg)</label><input type="number" id="calc-w" min="0" step="2.5" oninput="calc1RM()"></div>
-<div class="set-field"><label>Počet repů</label><input type="number" id="calc-r" min="1" max="30" oninput="calc1RM()"></div>
+<div class="set-field"><label>Váha (kg)</label><input type="number" inputmode="decimal" id="calc-w" min="0" step="2.5" oninput="calc1RM()"></div>
+<div class="set-field"><label>Počet repů</label><input type="number" inputmode="numeric" id="calc-r" min="1" max="30" oninput="calc1RM()"></div>
 <div id="calc-result" style="display:none">
 <div style="font-size:20px;font-weight:700;color:var(--acc);margin:8px 0" id="calc-1rm"></div>
 <table class="pct-table"><thead><tr><th>%1RM</th><th>Váha (kg)</th></tr></thead><tbody id="calc-pcts"></tbody></table>
@@ -271,10 +279,18 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 </div>
 <div class="set-section">
 <h3>⚙️ Moje 1RM maxima</h3>
-<div class="set-field"><label>Squat (kg)</label><input type="number" id="set-sq" min="0" step="2.5" onchange="save1RM()"></div>
-<div class="set-field"><label>Bench Press (kg)</label><input type="number" id="set-bp" min="0" step="2.5" onchange="save1RM()"></div>
-<div class="set-field"><label>Deadlift (kg)</label><input type="number" id="set-dl" min="0" step="2.5" onchange="save1RM()"></div>
-<div class="set-field"><label>Overhead Press (kg)</label><input type="number" id="set-ohp" min="0" step="2.5" onchange="save1RM()"></div>
+<div class="set-field"><label>Squat (kg)</label><input type="number" inputmode="decimal" id="set-sq" min="0" step="2.5" onchange="save1RM()"></div>
+<div class="set-field"><label>Bench Press (kg)</label><input type="number" inputmode="decimal" id="set-bp" min="0" step="2.5" onchange="save1RM()"></div>
+<div class="set-field"><label>Deadlift (kg)</label><input type="number" inputmode="decimal" id="set-dl" min="0" step="2.5" onchange="save1RM()"></div>
+<div class="set-field"><label>Overhead Press (kg)</label><input type="number" inputmode="decimal" id="set-ohp" min="0" step="2.5" onchange="save1RM()"></div>
+</div>
+<div class="set-section">
+<h3>💾 Záloha dat</h3>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn-sm btn-ghost" onclick="exportData()">Exportovat data</button>
+<button class="btn btn-sm btn-ghost" onclick="document.getElementById('import-file').click()">Importovat data</button>
+<input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
+</div>
 </div>
 <div class="set-section">
 <h3>🗑️ Data</h3>
@@ -291,9 +307,9 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 <div class="timer-time" id="timer-time">0:00</div>
 </div>
 <div class="timer-btns">
-<button class="btn btn-sm btn-ghost" onclick="timerAdd(30)">+30s</button>
-<button class="btn btn-sm" onclick="timerDismiss()">Hotovo</button>
 <button class="btn btn-sm btn-ghost" onclick="timerAdd(-30)">-30s</button>
+<button class="btn btn-sm" onclick="timerDismiss()">Hotovo</button>
+<button class="btn btn-sm btn-ghost" onclick="timerAdd(30)">+30s</button>
 </div>
 </div>
 
@@ -789,29 +805,29 @@ let timerInterval = null;
 let timerSeconds = 0;
 let timerTotal = 0;
 
-function save(key, val) { localStorage.setItem('pb_' + key, JSON.stringify(val)); }
+function save(key, val) { try { localStorage.setItem('pb_' + key, JSON.stringify(val)); } catch(e) { console.warn('localStorage full or unavailable', e); } }
 
 // ==================== ONBOARDING ====================
 let obData = { exp: '', freq: '', goal: '' };
 
-function obSetExp(v) {
+function obSetExp(v, el) {
   obData.exp = v;
   document.querySelectorAll('#ob1 .ob-opt').forEach(b => b.classList.remove('sel'));
-  event.target.closest('.ob-opt').classList.add('sel');
+  el.closest('.ob-opt').classList.add('sel');
   document.getElementById('ob-exp-warn').style.display = v === 'beginner' ? 'block' : 'none';
   document.getElementById('ob1next').disabled = false;
 }
-function obSetFreq(v) {
+function obSetFreq(v, el) {
   obData.freq = v;
   document.querySelectorAll('#ob2 .ob-opt').forEach(b => b.classList.remove('sel'));
-  event.target.closest('.ob-opt').classList.add('sel');
+  el.closest('.ob-opt').classList.add('sel');
   document.getElementById('ob-freq-warn').style.display = v === '2x' ? 'block' : 'none';
   document.getElementById('ob2next').disabled = false;
 }
-function obSetGoal(v) {
+function obSetGoal(v, el) {
   obData.goal = v;
   document.querySelectorAll('#ob3 .ob-opt').forEach(b => b.classList.remove('sel'));
-  event.target.closest('.ob-opt').classList.add('sel');
+  el.closest('.ob-opt').classList.add('sel');
   document.getElementById('ob3next').disabled = false;
 }
 function obStep(n) {
@@ -881,6 +897,28 @@ function renderWeek() {
     return `<button class="day-tab${i === S.cur.day ? ' act' : ''}${done ? ' done' : ''}" onclick="selectDay(${i})">${d.name.split('–')[0].trim()}${done ? ' ✓' : ''}</button>`;
   }).join('');
   renderDay();
+  // Auto-scroll active tab into view
+  requestAnimationFrame(() => {
+    const activeTab = tabs.querySelector('.day-tab.act');
+    if (activeTab) activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  });
+}
+
+function isTopSet(ex) {
+  if (!ex.pct || !ex.rpe || ex.rpe < 8.5) return false;
+  const n = ex.name.toLowerCase();
+  return n.includes('squat') || n.includes('bench') || n.includes('deadlift') || n.includes('block pull') || n.includes('overhead') || n.includes('ohp');
+}
+
+function countSets(day, log) {
+  let done = 0, total = 0;
+  day.exercises.forEach((ex, ei) => {
+    for (let s = 0; s < ex.working; s++) {
+      total++;
+      if (log[ei + '-' + s] && log[ei + '-' + s].done) done++;
+    }
+  });
+  return { done, total };
 }
 
 function renderDay() {
@@ -889,16 +927,26 @@ function renderDay() {
   if (!day) return;
   const key = S.cur.week + '-' + S.cur.day;
   const log = S.logs[key] || {};
+  const isCompleted = S.history.some(h => h.key === key);
   document.querySelectorAll('.day-tab').forEach((t, i) => t.classList.toggle('act', i === S.cur.day));
+
+  // Save focused element info to restore after render
+  const focused = document.activeElement;
+  const focusKey = focused && focused.dataset ? focused.dataset.key : null;
+  const focusField = focused && focused.dataset ? focused.dataset.field : null;
+
+  const { done: setsDone, total: setsTotal } = countSets(day, log);
   let html = `<h3 style="padding:4px 0 8px;font-size:16px;color:var(--acc)">${day.name}</h3>`;
+  html += `<div class="workout-progress"><span class="wp-text">${setsDone}/${setsTotal} sérií</span><div class="wp-bar"><div class="wp-fill" style="width:${setsTotal ? (setsDone/setsTotal)*100 : 0}%"></div></div><span class="wp-text">${setsTotal ? Math.round((setsDone/setsTotal)*100) : 0}%</span></div>`;
+
   day.exercises.forEach((ex, ei) => {
     const isSS = ex.ss !== null;
     const calcWeight = getCalcWeight(ex);
-    const prevLog = getPrevLog(ex.name, ei, key);
+    const prevLog = getPrevLog(ex.name, key);
     const overload = getOverloadSuggestion(ex, prevLog);
     html += `<div class="ex-card${isSS ? ' ss' : ''}">`;
     html += `<div class="ex-hdr"><span class="ex-name">${ex.name}</span><div class="ex-badges">`;
-    if (ex.rpe && ex.rpe >= 8.5) html += `<span class="ex-badge top">TOP SET</span>`;
+    if (isTopSet(ex)) html += `<span class="ex-badge top">TOP SET</span>`;
     if (ex.ss) html += `<span class="ex-badge" style="background:#1a0a2a;color:#9c27b0">${ex.ss}</span>`;
     if (S.prs[ex.name]) html += `<span class="ex-badge pr">🏆 PR</span>`;
     html += `</div></div>`;
@@ -912,35 +960,52 @@ function renderDay() {
     if (overload) html += `<div class="ex-overload">📈 ${overload}</div>`;
     // Warmup sets
     if (ex.warmup > 0) {
-      html += `<div class="warmup-toggle" onclick="this.nextElementSibling.classList.toggle('open')">▸ ${ex.warmup} warm-up ${ex.warmup === 1 ? 'set' : 'setů'}</div>`;
+      html += `<div class="warmup-toggle" onclick="this.nextElementSibling.classList.toggle('open')">▸ ${ex.warmup} zahřívací ${ex.warmup === 1 ? 'série' : 'série'}</div>`;
       html += `<div class="warmup-sets">`;
       for (let s = 0; s < ex.warmup; s++) {
-        html += `<div class="set-row wu"><span class="set-label">W${s + 1}</span>`;
-        html += `<input class="set-input" type="number" placeholder="kg" step="2.5">`;
+        const wuKey = `wu-${ei}-${s}`;
+        const wuLog = log[wuKey] || {};
+        html += `<div class="set-row wu"><span class="set-label">Z${s + 1}</span>`;
+        html += `<input class="set-input" type="number" inputmode="decimal" placeholder="kg" step="2.5" value="${wuLog.w || ''}" data-key="${wuKey}" data-field="w" onchange="logSet(this)">`;
         html += `<span class="set-x">×</span>`;
-        html += `<input class="set-input" type="number" placeholder="reps" style="width:50px">`;
-        html += `<div class="set-check" onclick="this.classList.toggle('done')"></div></div>`;
+        html += `<input class="set-input" type="number" inputmode="numeric" placeholder="reps" style="width:62px" value="${wuLog.r || ''}" data-key="${wuKey}" data-field="r" onchange="logSet(this)">`;
+        html += `<div class="set-check${wuLog.done ? ' done' : ''}" data-key="${wuKey}" onclick="toggleWarmup(this)"></div></div>`;
       }
       html += `</div>`;
     }
     // Working sets
+    const nextEx = day.exercises[ei + 1];
+    const isSSPair = isSS && nextEx && nextEx.ss && ex.ss[0] === nextEx.ss[0];
     for (let s = 0; s < ex.working; s++) {
-      const sKey = `${key}-${ei}-${s}`;
       const sLog = log[`${ei}-${s}`] || {};
       const prefill = sLog.w || (prevLog && prevLog[s] ? prevLog[s].w : '') || (calcWeight ? calcWeight.split('-')[0] : '');
       const prefillR = sLog.r || (prevLog && prevLog[s] ? prevLog[s].r : '') || '';
       const isDone = sLog.done;
+      const isLastSet = s === ex.working - 1;
+      const skipTimer = isSSPair && isLastSet ? '1' : '0';
       html += `<div class="set-row"><span class="set-label">${s + 1}</span>`;
-      html += `<input class="set-input${!sLog.w && prefill ? ' prefilled' : ''}" type="number" placeholder="kg" step="2.5" value="${sLog.w || ''}" data-key="${ei}-${s}" data-field="w" onchange="logSet(this)" onfocus="if(!this.value&&'${prefill}')this.value='${prefill}'" ${prefill && !sLog.w ? `placeholder="${prefill}"` : ''}>`;
+      html += `<input class="set-input${!sLog.w && prefill ? ' prefilled' : ''}" type="number" inputmode="decimal" placeholder="kg" step="2.5" value="${sLog.w || ''}" data-key="${ei}-${s}" data-field="w" onchange="logSet(this)" onfocus="if(!this.value&&'${prefill}')this.value='${prefill}'" ${prefill && !sLog.w ? `placeholder="${prefill}"` : ''}>`;
       html += `<span class="set-x">×</span>`;
-      html += `<input class="set-input" type="number" placeholder="${prefillR || ex.reps}" style="width:62px" value="${sLog.r || ''}" data-key="${ei}-${s}" data-field="r" onchange="logSet(this)" onfocus="if(!this.value&&'${prefillR}')this.value='${prefillR}'">`;
-      html += `<div class="set-check${isDone ? ' done' : ''}" data-key="${ei}-${s}" onclick="toggleSet(this,'${ex.rest}','${ex.name}',${ei},${s})"></div></div>`;
+      html += `<input class="set-input" type="number" inputmode="numeric" placeholder="${prefillR || ex.reps}" style="width:62px" value="${sLog.r || ''}" data-key="${ei}-${s}" data-field="r" onchange="logSet(this)" onfocus="if(!this.value&&'${prefillR}')this.value='${prefillR}'">`;
+      html += `<div class="set-check${isDone ? ' done' : ''}" data-key="${ei}-${s}" data-skip-timer="${skipTimer}" onclick="toggleSet(this,'${ex.rest}','${ex.name}',${ei},${s})"></div></div>`;
     }
     html += `</div>`;
   });
+
+  if (isCompleted) {
+    html += `<div class="workout-done-msg"><div class="wd-emoji">💪</div><div class="wd-text">Trénink dokončen!</div><div class="wd-sub">${day.name}</div></div>`;
+  }
   const allDone = isWorkoutDone(key, day);
-  html += `<button class="complete-btn" ${allDone ? '' : 'disabled'} onclick="completeWorkout()">DOKONČIT TRÉNINK ✓</button>`;
+  if (!isCompleted) {
+    html += `<button class="complete-btn" ${allDone ? '' : 'disabled'} onclick="completeWorkout()">DOKONČIT TRÉNINK ✓</button>`;
+  }
   document.getElementById('ex-list').innerHTML = html;
+
+  // Restore focus
+  if (focusKey && focusField) {
+    const el = document.querySelector(`input[data-key="${focusKey}"][data-field="${focusField}"]`);
+    if (el) { el.focus(); el.selectionStart = el.selectionEnd = el.value.length; }
+  }
 }
 
 // ==================== WEIGHT CALC ====================
@@ -975,6 +1040,16 @@ function logSet(input) {
   save('logs', S.logs);
 }
 
+function toggleWarmup(el) {
+  const key = S.cur.week + '-' + S.cur.day;
+  if (!S.logs[key]) S.logs[key] = {};
+  const sk = el.dataset.key;
+  if (!S.logs[key][sk]) S.logs[key][sk] = {};
+  S.logs[key][sk].done = !S.logs[key][sk].done;
+  el.classList.toggle('done', S.logs[key][sk].done);
+  save('logs', S.logs);
+}
+
 function toggleSet(el, restTime, exName, ei, si) {
   const key = S.cur.week + '-' + S.cur.day;
   if (!S.logs[key]) S.logs[key] = {};
@@ -983,28 +1058,33 @@ function toggleSet(el, restTime, exName, ei, si) {
   const done = !S.logs[key][sk].done;
   S.logs[key][sk].done = done;
   el.classList.toggle('done', done);
-  save('logs', S.logs);
-  // Fill weight from input if empty
+  // Fill weight and reps from input if empty
   const row = el.parentElement;
   const inputs = row.querySelectorAll('.set-input');
   if (done && inputs[0] && !S.logs[key][sk].w && inputs[0].value) {
     S.logs[key][sk].w = parseFloat(inputs[0].value);
-    save('logs', S.logs);
   }
   if (done && inputs[1] && !S.logs[key][sk].r && inputs[1].value) {
     S.logs[key][sk].r = parseFloat(inputs[1].value);
-    save('logs', S.logs);
   }
+  save('logs', S.logs);
   // Check PR
   if (done && S.logs[key][sk].w && S.logs[key][sk].r) {
     checkPR(exName, S.logs[key][sk].w, S.logs[key][sk].r);
   }
-  // Check if all working sets done
+  // Update progress bar and complete button without full re-render
   const day = program[S.cur.week].days[S.cur.day];
+  const log = S.logs[key] || {};
+  const { done: setsDone, total: setsTotal } = countSets(day, log);
+  const wpText = document.querySelectorAll('.wp-text');
+  const wpFill = document.querySelector('.wp-fill');
+  if (wpText[0]) wpText[0].textContent = `${setsDone}/${setsTotal} sérií`;
+  if (wpText[1]) wpText[1].textContent = `${setsTotal ? Math.round((setsDone/setsTotal)*100) : 0}%`;
+  if (wpFill) wpFill.style.width = `${setsTotal ? (setsDone/setsTotal)*100 : 0}%`;
   const btn = document.querySelector('.complete-btn');
   if (btn) btn.disabled = !isWorkoutDone(key, day);
-  // Start timer
-  if (done) {
+  // Start timer (skip for superset pairs)
+  if (done && el.dataset.skipTimer !== '1') {
     const secs = parseRestTime(restTime);
     startTimer(secs, exName);
   }
@@ -1025,23 +1105,41 @@ function completeWorkout() {
   const day = program[S.cur.week].days[S.cur.day];
   if (!S.history.some(h => h.key === key)) {
     S.history.unshift({ key, name: day.name, date: new Date().toISOString(), done: true });
-    if (S.history.length > 50) S.history.pop();
+    if (S.history.length > 100) S.history.pop();
     save('history', S.history);
   }
+  // Show success and re-render
   renderWeek();
+  // Vibrate on completion
+  if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+  // Auto-advance to next day after a short delay
+  const wk = program[S.cur.week];
+  const nextDay = wk.days.findIndex((d, i) => i > S.cur.day && !S.history.some(h => h.key === S.cur.week + '-' + i));
+  if (nextDay !== -1) {
+    setTimeout(() => { selectDay(nextDay); }, 2000);
+  } else if (S.cur.week < program.length - 1) {
+    // All days done this week, advance to next week after delay
+    setTimeout(() => { navWeek(1); }, 2000);
+  }
 }
 
 // ==================== PREV LOG & OVERLOAD ====================
-function getPrevLog(exName, ei, currentKey) {
-  // Find last logged data for this exercise
+function getPrevLog(exName, currentKey) {
+  // Find last logged data for this exercise BY NAME
   for (const h of S.history) {
     if (h.key === currentKey) continue;
     const log = S.logs[h.key];
     if (!log) continue;
+    // Find the exercise index in that historical workout by matching name
+    const [wk, di] = h.key.split('-').map(Number);
+    if (!program[wk] || !program[wk].days[di]) continue;
+    const histDay = program[wk].days[di];
+    const histEi = histDay.exercises.findIndex(e => e.name === exName);
+    if (histEi === -1) continue;
     const result = {};
     let found = false;
     for (let s = 0; s < 10; s++) {
-      const k = ei + '-' + s;
+      const k = histEi + '-' + s;
       if (log[k] && log[k].w) { result[s] = log[k]; found = true; }
     }
     if (found) return result;
@@ -1127,6 +1225,8 @@ function playBeep() {
     osc.start(); osc.stop(ctx.currentTime + 0.3);
     setTimeout(() => { const o2 = ctx.createOscillator(); const g2 = ctx.createGain(); o2.connect(g2); g2.connect(ctx.destination); o2.frequency.value = 1000; g2.gain.value = 0.3; o2.start(); o2.stop(ctx.currentTime + 0.3); }, 400);
   } catch(e) {}
+  // Vibrate on timer end
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 300]);
 }
 
 // ==================== PROGRESS ====================
@@ -1143,10 +1243,10 @@ function renderProgress() {
   }
   document.getElementById('st-streak').textContent = streak + ' týd.';
 
-  // Volume chart
+  // Volume chart (real volume: weight × reps, or count completed sets for bodyweight)
   const muscleNames = {qu:'Quady',hm:'Hamstringy',gl:'Hýždě',ch:'Hrudník',bk:'Záda',sh:'Ramena',bi:'Bicepsy',tr:'Tricepsy',ca:'Lýtka',co:'Core'};
-  const vol = {};
-  Object.keys(muscleNames).forEach(m => vol[m] = 0);
+  const vol = {}, sets = {};
+  Object.keys(muscleNames).forEach(m => { vol[m] = 0; sets[m] = 0; });
   if (program) {
     const wk = program[S.cur.week];
     wk.days.forEach((day, di) => {
@@ -1154,16 +1254,25 @@ function renderProgress() {
       const log = S.logs[key] || {};
       day.exercises.forEach((ex, ei) => {
         for (let s = 0; s < ex.working; s++) {
-          if (log[ei + '-' + s] && log[ei + '-' + s].done) {
-            ex.muscles.forEach(m => { if (vol[m] !== undefined) vol[m]++; });
+          const sl = log[ei + '-' + s];
+          if (sl && sl.done) {
+            ex.muscles.forEach(m => {
+              if (sets[m] !== undefined) {
+                sets[m]++;
+                if (sl.w && sl.r) vol[m] += sl.w * sl.r;
+              }
+            });
           }
         }
       });
     });
   }
-  const maxVol = Math.max(1, ...Object.values(vol));
+  const hasVol = Object.values(vol).some(v => v > 0);
+  const chartData = hasVol ? vol : sets;
+  const maxVol = Math.max(1, ...Object.values(chartData));
+  const unit = hasVol ? 'kg' : 'sérií';
   document.getElementById('vol-chart').innerHTML = Object.entries(muscleNames).map(([k, v]) =>
-    `<div class="bar-row"><span class="bar-label">${v}</span><div class="bar-track"><div class="bar-fill" style="width:${(vol[k] / maxVol) * 100}%"></div></div><span class="bar-val">${vol[k]}</span></div>`
+    `<div class="bar-row"><span class="bar-label">${v}</span><div class="bar-track"><div class="bar-fill" style="width:${(chartData[k] / maxVol) * 100}%"></div></div><span class="bar-val">${hasVol ? Math.round(chartData[k]) : chartData[k]}</span></div>`
   ).join('');
 
   // History
@@ -1202,8 +1311,35 @@ function save1RM() {
 
 function resetData() {
   if (!confirm('Opravdu chceš smazat VŠECHNA data? Tato akce je nevratná.')) return;
-  localStorage.clear();
+  Object.keys(localStorage).filter(k => k.startsWith('pb_')).forEach(k => localStorage.removeItem(k));
   location.reload();
+}
+
+function exportData() {
+  const data = {};
+  Object.keys(localStorage).filter(k => k.startsWith('pb_')).forEach(k => data[k] = localStorage.getItem(k));
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'powerbuilding-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!confirm('Importovat data? Stávající data budou přepsána.')) return;
+      Object.entries(data).forEach(([k, v]) => { if (k.startsWith('pb_')) localStorage.setItem(k, v); });
+      location.reload();
+    } catch(err) { alert('Neplatný soubor zálohy.'); }
+  };
+  reader.readAsText(file);
+  input.value = '';
 }
 
 // ==================== SERVICE WORKER ====================
