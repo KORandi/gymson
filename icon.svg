@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0a0a0f"/>
+  <g transform="translate(256,280)" fill="none" stroke="#e8530a" stroke-width="22" stroke-linecap="round">
+    <line x1="-160" y1="0" x2="160" y2="0"/>
+    <rect x="-160" y="-50" width="50" height="100" rx="8" fill="#e8530a"/>
+    <rect x="110" y="-50" width="50" height="100" rx="8" fill="#e8530a"/>
+    <rect x="-130" y="-35" width="20" height="70" rx="5" fill="#e8530a"/>
+    <rect x="110" y="-35" width="20" height="70" rx="5" fill="#e8530a" transform="translate(0,0)"/>
+  </g>
+  <text x="256" y="170" text-anchor="middle" font-size="90" font-family="Arial Black,Arial,sans-serif" fill="#e8530a" font-weight="900" letter-spacing="-2">POWER</text>
+</svg>
