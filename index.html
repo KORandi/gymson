@@ -445,6 +445,73 @@ const ALTERNATIVES = {
   '5" Block Pull': ['Rack Pull','Deadlift','Trap Bar Deadlift','Romanian Deadlift','Deficit Deadlift'],
 };
 
+// Complexity multipliers for alternatives relative to original exercise (1.0 = same weight)
+const ALT_MULTIPLIER = {
+  // Back Squat alternatives
+  'Back Squat>Front Squat':0.85,'Back Squat>Leg Press':1.2,'Back Squat>Hack Squat':0.9,
+  'Back Squat>Goblet Squat':0.4,'Back Squat>Safety Bar Squat':0.9,
+  // Deadlift alternatives
+  'Deadlift>Trap Bar Deadlift':1.05,'Deadlift>Romanian Deadlift':0.7,
+  'Deadlift>Sumo Deadlift':1.0,'Deadlift>Rack Pull':1.1,'Deadlift>Block Pull':1.05,
+  // Barbell Bench Press alternatives
+  'Barbell Bench Press>Dumbbell Bench Press':0.4,'Barbell Bench Press>Machine Chest Press':0.9,
+  'Barbell Bench Press>Floor Press':0.9,'Barbell Bench Press>Smith Machine Bench Press':0.95,
+  'Barbell Bench Press>Barbell Floor Press':0.85,
+  // Overhead Press alternatives
+  'Overhead Press>Seated Dumbbell Press':0.4,'Overhead Press>Landmine Press':0.7,
+  'Overhead Press>Arnold Press':0.35,'Overhead Press>Machine Shoulder Press':0.9,'Overhead Press>Z Press':0.8,
+  // Pause Deadlift alternatives
+  'Pause Deadlift>Deficit Deadlift':0.85,'Pause Deadlift>Pause Romanian Deadlift':0.65,
+  'Pause Deadlift>Snatch-Grip Deadlift':0.75,'Pause Deadlift>Block Pull':1.05,'Pause Deadlift>Trap Bar Deadlift':1.0,
+  // Pause Bench alternatives
+  'Pause Barbell Bench Press>Spoto Press':0.9,'Pause Barbell Bench Press>Larsen Press':0.85,
+  'Pause Barbell Bench Press>Close-Grip Bench Press':0.85,'Pause Barbell Bench Press>Dumbbell Bench Press':0.4,
+  'Pause Barbell Bench Press>Pin Press':0.95,
+  // Sumo Box Squat alternatives
+  'Sumo Box Squat>Pause Squat':0.9,'Sumo Box Squat>Box Squat':0.95,
+  'Sumo Box Squat>Tempo Squat':0.85,'Sumo Box Squat>Pin Squat':0.9,'Sumo Box Squat>Goblet Squat':0.4,
+  // Low-Bar Back Squat alternatives
+  'Low-Bar Back Squat>High-Bar Back Squat':0.95,'Low-Bar Back Squat>Safety Bar Squat':0.9,
+  'Low-Bar Back Squat>Front Squat':0.8,'Low-Bar Back Squat>Hack Squat':0.85,'Low-Bar Back Squat>Leg Press':1.15,
+  // Squat Walk-Out alternatives
+  'Squat Walk-Out>Heavy Hold':1.0,'Squat Walk-Out>Squat Walkout with Pause':1.0,
+  'Squat Walk-Out>Safety Bar Walk-Out':0.95,'Squat Walk-Out>Partial Squat':0.9,'Squat Walk-Out>Supra-Max Leg Press':1.2,
+  // AMRAP variants
+  'Back Squat AMRAP>Front Squat AMRAP':0.85,'Back Squat AMRAP>Leg Press AMRAP':1.2,
+  'Back Squat AMRAP>Hack Squat AMRAP':0.9,'Back Squat AMRAP>Safety Bar Squat AMRAP':0.9,
+  'Back Squat AMRAP>Goblet Squat AMRAP':0.4,
+  'Barbell Bench Press AMRAP>Dumbbell Bench Press AMRAP':0.4,'Barbell Bench Press AMRAP>Machine Chest Press AMRAP':0.9,
+  'Barbell Bench Press AMRAP>Floor Press AMRAP':0.9,'Barbell Bench Press AMRAP>Incline Press AMRAP':0.85,
+  'Barbell Bench Press AMRAP>Smith Machine Bench AMRAP':0.95,
+  'Deadlift AMRAP>Trap Bar Deadlift AMRAP':1.05,'Deadlift AMRAP>Romanian Deadlift AMRAP':0.7,
+  'Deadlift AMRAP>Sumo Deadlift AMRAP':1.0,'Deadlift AMRAP>Rack Pull AMRAP':1.1,
+  'Deadlift AMRAP>Block Pull AMRAP':1.05,
+  // Overhead Press / Push Press
+  'Overhead Press / Push Press>Seated Dumbbell Press':0.4,'Overhead Press / Push Press>Landmine Press':0.7,
+  'Overhead Press / Push Press>Arnold Press':0.35,'Overhead Press / Push Press>Machine Shoulder Press':0.9,
+  'Overhead Press / Push Press>Z Press':0.8,
+  // Block Pulls
+  '2" Block Pull>Rack Pull':1.05,'2" Block Pull>Deadlift':0.95,'2" Block Pull>Trap Bar Deadlift':1.0,
+  '2" Block Pull>Romanian Deadlift':0.7,'2" Block Pull>Deficit Deadlift':0.85,
+  '3" Block Pull>Rack Pull':1.0,'3" Block Pull>Deadlift':0.9,'3" Block Pull>Trap Bar Deadlift':0.95,
+  '3" Block Pull>Romanian Deadlift':0.65,'3" Block Pull>Deficit Deadlift':0.8,
+  '4" Block Pull>Rack Pull':0.95,'4" Block Pull>Deadlift':0.85,'4" Block Pull>Trap Bar Deadlift':0.9,
+  '4" Block Pull>Romanian Deadlift':0.6,'4" Block Pull>Deficit Deadlift':0.75,
+  '5" Block Pull>Rack Pull':0.9,'5" Block Pull>Deadlift':0.8,'5" Block Pull>Trap Bar Deadlift':0.85,
+  '5" Block Pull>Romanian Deadlift':0.6,'5" Block Pull>Deficit Deadlift':0.7,
+  // Flat-Back Bench variants
+  'Flat-Back Barbell Bench Press>Barbell Bench Press':1.0,'Flat-Back Barbell Bench Press>Dumbbell Bench Press':0.4,
+  'Flat-Back Barbell Bench Press>Machine Chest Press':0.9,'Flat-Back Barbell Bench Press>Smith Machine Bench Press':0.95,
+  'Flat-Back Barbell Bench Press>Floor Press':0.9,
+  'Flat-Back Bench Press>Barbell Bench Press':1.0,'Flat-Back Bench Press>Dumbbell Bench Press':0.4,
+  'Flat-Back Bench Press>Machine Chest Press':0.9,'Flat-Back Bench Press>Smith Machine Bench Press':0.95,
+  'Flat-Back Bench Press>Floor Press':0.9,
+  // Barbell Floor Press
+  'Barbell Floor Press>Dumbbell Floor Press':0.4,'Barbell Floor Press>Close-Grip Bench Press':1.0,
+  'Barbell Floor Press>Pin Press':1.05,'Barbell Floor Press>Board Press':1.05,
+  'Barbell Floor Press>Smith Machine Floor Press':0.95,
+};
+
 // ==================== PROGRAM DATA (4x variant, all 11 weeks) ====================
 const ARM_DAY = {name:'Arm & Pump Day',exercises:[
 E('Barbell Curl',1,3,'12',null,8,'0.5','Obloukovitě, bez švihání',['bi'],'A1'),
@@ -1048,7 +1115,7 @@ function renderDay() {
     const isSS = ex.ss !== null;
     const displayName = getExDisplayName(ex.name);
     const hasAlts = !!ALTERNATIVES[ex.name];
-    const calcWeight = getCalcWeight(ex);
+    const calcWeight = getCalcWeight(ex, ex.name);
     const prevLog = getPrevLog(displayName, key) || getPrevLog(ex.name, key);
     const overload = getOverloadSuggestion(ex, prevLog);
     html += `<div class="ex-card${isSS ? ' ss' : ''}">`;
@@ -1190,10 +1257,9 @@ function getWarmupReps(numSets) {
   return [5];
 }
 
-function getCalcWeight(ex) {
+function getCalcWeight(ex, originalName) {
   if (!ex.pct) return null;
   const pcts = ex.pct.split('-').map(Number);
-  const avg = pcts.reduce((a, b) => a + b, 0) / pcts.length;
   let base = 0;
   const n = ex.name.toLowerCase();
   if (n.includes('squat') && !n.includes('walk')) base = S.settings.sq;
@@ -1201,12 +1267,15 @@ function getCalcWeight(ex) {
   else if (n.includes('deadlift') || n.includes('block pull')) base = S.settings.dl;
   else if (n.includes('overhead') || n.includes('ohp') || n.includes('push press')) base = S.settings.ohp;
   if (!base) return null;
-  const w = Math.round((base * avg / 100) * 2) / 2;
+  // Apply complexity multiplier if an alternative is selected
+  const altName = originalName && S.alts[originalName];
+  const mult = altName ? (ALT_MULTIPLIER[originalName + '>' + altName] || 1.0) : 1.0;
   if (pcts.length > 1) {
-    const lo = Math.round((base * pcts[0] / 100) * 2) / 2;
-    const hi = Math.round((base * pcts[1] / 100) * 2) / 2;
+    const lo = Math.round((base * pcts[0] / 100 * mult) * 2) / 2;
+    const hi = Math.round((base * pcts[1] / 100 * mult) * 2) / 2;
     return lo + '-' + hi;
   }
+  const w = Math.round((base * pcts[0] / 100 * mult) * 2) / 2;
   return String(w);
 }
 
