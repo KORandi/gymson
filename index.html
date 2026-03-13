@@ -119,6 +119,23 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .complete-btn:hover{background:var(--acc2)}
 .complete-btn:disabled{opacity:.4}
 
+/* ALTERNATIVES SWAP */
+.ex-swap-btn{background:none;color:var(--txt2);font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--brd);display:inline-flex;align-items:center;gap:4px;margin-top:6px;transition:.2s}
+.ex-swap-btn:hover{border-color:var(--acc);color:var(--acc)}
+.ex-swap-btn svg{width:14px;height:14px;fill:currentColor}
+.alt-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:250}
+.alt-overlay.active{display:block}
+.alt-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-radius:16px 16px 0 0;z-index:251;padding:16px 16px calc(16px + env(safe-area-inset-bottom));max-height:70vh;overflow-y:auto;transform:translateY(100%);transition:transform .3s ease}
+.alt-sheet.active{transform:translateY(0)}
+.alt-sheet-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.alt-sheet-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--acc)}
+.alt-sheet-close{background:none;color:var(--txt2);font-size:24px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.alt-sheet-close:hover{color:var(--txt);background:var(--bg3)}
+.alt-option{width:100%;padding:14px;background:var(--bg3);border:2px solid var(--brd);border-radius:10px;color:var(--txt);font-size:15px;text-align:left;margin-bottom:8px;transition:.2s;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.3px}
+.alt-option:hover{border-color:var(--acc);background:#1c1510}
+.alt-option.sel{border-color:var(--acc);background:#1c1510;color:var(--acc)}
+.alt-option .alt-orig{font-size:11px;color:var(--txt2);font-family:'Barlow',sans-serif;font-weight:400;margin-top:2px}
+
 /* TIMER OVERLAY */
 #timer{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:20px}
 #timer.active{display:flex}
@@ -327,6 +344,15 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 <div style="font-size:12px;color:var(--txt2);margin-top:16px">Klikni pro zavření</div>
 </div>
 
+<div id="alt-overlay" class="alt-overlay" onclick="closeAltSheet()"></div>
+<div id="alt-sheet" class="alt-sheet">
+  <div class="alt-sheet-hdr">
+    <span class="alt-sheet-title" id="alt-sheet-title">Vybrat alternativu</span>
+    <button class="alt-sheet-close" onclick="closeAltSheet()">&times;</button>
+  </div>
+  <div id="alt-sheet-options"></div>
+</div>
+
 <!-- BOTTOM NAV -->
 <nav class="bnav" id="bnav" style="display:none">
 <button class="act" onclick="switchTab('program')">
@@ -346,6 +372,55 @@ Nastavení
 <script>
 // ==================== EXERCISE HELPER ====================
 function E(name,warmup,working,reps,pct,rpe,rest,note,muscles,ss){return{name,warmup,working,reps,pct,rpe,rest,note,muscles:muscles||[],ss:ss||null}}
+
+// ==================== EXERCISE ALTERNATIVES ====================
+const ALTERNATIVES = {
+  'Back Squat': ['Front Squat','Leg Press','Hack Squat','Goblet Squat','Safety Bar Squat'],
+  'Deadlift': ['Trap Bar Deadlift','Romanian Deadlift','Sumo Deadlift','Rack Pull','Block Pull'],
+  'Barbell Bench Press': ['Dumbbell Bench Press','Machine Chest Press','Floor Press','Smith Machine Bench Press','Barbell Floor Press'],
+  'Overhead Press': ['Seated Dumbbell Press','Landmine Press','Arnold Press','Machine Shoulder Press','Z Press'],
+  'Weighted Pull-Up': ['Lat Pulldown','Assisted Chin-Up','Neutral Grip Pull-Up','Single-Arm Lat Pulldown','Band-Assisted Pull-Up'],
+  'Weighted Dip': ['Close-Grip Bench Press','Machine Dip','DB Floor Press','Push-Up','Cable Chest Dip'],
+  'Glute Ham Raise': ['Leg Curl','Nordic Ham Curl','Seated Leg Curl','Lying Leg Curl','Swiss Ball Leg Curl'],
+  'Nordic Ham Curl': ['Leg Curl','Lying Leg Curl','Seated Leg Curl','Glute Ham Raise','Swiss Ball Leg Curl'],
+  'Pause Deadlift': ['Deficit Deadlift','Pause Romanian Deadlift','Snatch-Grip Deadlift','Block Pull','Trap Bar Deadlift'],
+  'Pause Barbell Bench Press': ['Spoto Press','Larsen Press','Close-Grip Bench Press','Dumbbell Bench Press','Pin Press'],
+  'Helms Row': ['Chest-Supported DB Row','Seal Row','Pendlay Row','T-Bar Row','Cable Row'],
+  'Chest-Supported T-Bar Row': ['Chest-Supported DB Row','Seal Row','Pendlay Row','Cable Row','Helms Row'],
+  'Hammer Curl': ['Incline Dumbbell Curl','Barbell Curl','Cable Curl','Preacher Curl','Concentration Curl'],
+  'Incline Dumbbell Curl': ['Hammer Curl','Barbell Curl','Cable Curl','Preacher Curl','Spider Curl'],
+  'Floor Skull Crusher': ['Skull Crusher','Triceps Pressdown','Overhead Triceps Extension','Close-Grip Bench Press','Cable Skull Crusher'],
+  'Skull Crusher': ['Floor Skull Crusher','Triceps Pressdown','Overhead Triceps Extension','Dumbbell Kickback','Cable Skull Crusher'],
+  'Hanging Leg Raise': ['Cable Crunch','Leg Raise on Bench','Ab Wheel','V-Sit Up','Bicycle Crunch'],
+  'Face Pull': ['Band Pull-Apart','Reverse Flye','Cable External Rotation','Rear Delt Fly Machine','Bent Over Reverse DB Flye'],
+  'Standing Calf Raise': ['Seated Calf Raise','Leg Press Calf Raise','Smith Machine Calf Raise','Donkey Calf Raise','Single-Leg Calf Raise'],
+  'Hip Abduction': ['Banded Lateral Walk','Cable Hip Abduction','Cossack Squat','Side-Lying Hip Abduction','Sumo Walk'],
+  'Dumbbell Shrug': ['Barbell Shrug','Incline Shrug','Cable Shrug','Trap Bar Shrug','Behind-Back Barbell Shrug'],
+  'Lat Pull-Over': ['Straight-Arm Pulldown','Cable Pull-Over','DB Pull-Over','Machine Pull-Over','Single-Arm Lat Pulldown'],
+  'Sumo Box Squat': ['Pause Squat','Box Squat','Tempo Squat','Pin Squat','Goblet Squat'],
+  'Leg Curl': ['Lying Leg Curl','Seated Leg Curl','Nordic Ham Curl','Swiss Ball Leg Curl','Glute Ham Raise'],
+  'Leg Extension': ['Sissy Squat','Wall Sit','Spanish Squat','Terminal Knee Extension','Reverse Nordic Curl'],
+  'DB Lateral Raise': ['Lean-Away Lateral Raise','Cable Lateral Raise','Machine Lateral Raise','Upright Row','Band Lateral Raise'],
+  'Barbell Curl': ['Dumbbell Curl','Cable Curl','EZ Bar Curl','Preacher Curl','Hammer Curl'],
+  'Bulgarian Split Squat': ['Lunge','Step-Up','Single-Leg Press','Rear Foot Elevated Split Squat','Walking Lunge'],
+  'Pendlay Row': ['Barbell Row','Helms Row','T-Bar Row','Chest-Supported DB Row','Cable Row'],
+  'Dumbbell Incline Press': ['Incline Barbell Press','Incline Machine Press','Low Incline DB Press','Incline Cable Flye','Incline Smith Press'],
+  'Close-Grip Bench Press': ['Weighted Dip','Triceps Pressdown','JM Press','Floor Press','Diamond Push-Up'],
+  'Triceps Pressdown': ['Overhead Triceps Extension','Skull Crusher','Dumbbell Kickback','Cable Skull Crusher','Diamond Push-Up'],
+  'Chin-Up': ['Lat Pulldown','Assisted Chin-Up','Neutral Grip Pull-Up','Band-Assisted Chin-Up','Cable Row'],
+  'Single-Arm Row': ['Dumbbell Row','Cable Row','Meadows Row','Chest-Supported DB Row','Seal Row'],
+  'Barbell 45° Hyperextension': ['Back Extension','Reverse Hyper','Good Morning','Romanian Deadlift','45° Hyper Hold'],
+  'Snatch-Grip Romanian Deadlift': ['Romanian Deadlift','Stiff-Leg Deadlift','Good Morning','Barbell 45° Hyperextension','Single-Leg RDL'],
+  'Deficit Push-Up': ['Incline Push-Up','Dumbbell Flye','Cable Flye','Pec Deck','Push-Up'],
+  'Concentration Bicep Curl': ['Preacher Curl','Spider Curl','Cable Curl','Incline Dumbbell Curl','Machine Curl'],
+  'Lean-Away Lateral Raise': ['DB Lateral Raise','Cable Lateral Raise','Machine Lateral Raise','Upright Row','Band Lateral Raise'],
+  'Squat Walk-Out': ['Heavy Hold','Squat Walkout with Pause','Safety Bar Walk-Out','Partial Squat','Supra-Max Leg Press'],
+  'Low-Bar Back Squat': ['High-Bar Back Squat','Safety Bar Squat','Front Squat','Hack Squat','Leg Press'],
+  'Bicep Curl': ['Hammer Curl','Cable Curl','EZ Bar Curl','Preacher Curl','Concentration Curl'],
+  'Seated Leg Curl': ['Lying Leg Curl','Nordic Ham Curl','Swiss Ball Leg Curl','Glute Ham Raise','Leg Curl'],
+  'Upright Row': ['DB Lateral Raise','Cable Lateral Raise','Face Pull','Cable Upright Row','Machine Lateral Raise'],
+  'Banded Lateral Walk': ['Cable Hip Abduction','Hip Abduction Machine','Cossack Squat','Sumo Walk','Side-Lying Hip Abduction'],
+};
 
 // ==================== PROGRAM DATA (4x variant, all 11 weeks) ====================
 const ARM_DAY = {name:'Arm & Pump Day',exercises:[
@@ -804,7 +879,8 @@ let S = {
   logs: JSON.parse(localStorage.getItem('pb_logs') || '{}'),
   prs: JSON.parse(localStorage.getItem('pb_prs') || '{}'),
   history: JSON.parse(localStorage.getItem('pb_history') || '[]'),
-  cur: JSON.parse(localStorage.getItem('pb_current') || '{"week":0,"day":0}')
+  cur: JSON.parse(localStorage.getItem('pb_current') || '{"week":0,"day":0}'),
+  alts: JSON.parse(localStorage.getItem('pb_alts') || '{}')
 };
 let program = null;
 let timerInterval = null;
@@ -947,15 +1023,18 @@ function renderDay() {
 
   day.exercises.forEach((ex, ei) => {
     const isSS = ex.ss !== null;
+    const displayName = getExDisplayName(ex.name);
+    const hasAlts = !!ALTERNATIVES[ex.name];
     const calcWeight = getCalcWeight(ex);
-    const prevLog = getPrevLog(ex.name, key);
+    const prevLog = getPrevLog(displayName, key) || getPrevLog(ex.name, key);
     const overload = getOverloadSuggestion(ex, prevLog);
     html += `<div class="ex-card${isSS ? ' ss' : ''}">`;
-    html += `<div class="ex-hdr"><span class="ex-name">${ex.name}</span><div class="ex-badges">`;
+    html += `<div class="ex-hdr"><span class="ex-name">${displayName}</span><div class="ex-badges">`;
     if (isTopSet(ex)) html += `<span class="ex-badge top">TOP SET</span>`;
     if (ex.ss) html += `<span class="ex-badge" style="background:#1a0a2a;color:#9c27b0">${ex.ss}</span>`;
-    if (S.prs[ex.name]) html += `<span class="ex-badge pr">🏆 PR</span>`;
+    if (S.prs[displayName] || S.prs[ex.name]) html += `<span class="ex-badge pr">🏆 PR</span>`;
     html += `</div></div>`;
+    if (hasAlts) html += `<button class="ex-swap-btn" onclick="openAltSheet('${ex.name.replace(/'/g,"\\'")}')"><svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>Alternativy</button>`;
     html += `<div class="ex-meta">`;
     html += `<span>${ex.working}×${ex.reps}</span>`;
     if (calcWeight) html += `<span>~${calcWeight} kg</span>`;
@@ -999,7 +1078,7 @@ function renderDay() {
       html += `<input class="set-input${!sLog.w && prefill ? ' prefilled' : ''}" type="number" inputmode="decimal" step="2.5" value="${sLog.w || ''}" data-key="${ei}-${s}" data-field="w" onchange="logSet(this)" onfocus="if(!this.value&&'${prefill}')this.value='${prefill}'" ${prefill && !sLog.w ? `placeholder="${prefill}"` : ''}>`;
       html += `<span class="set-unit">kg</span><span class="set-x">×</span>`;
       html += `<input class="set-input" type="number" inputmode="numeric" placeholder="${prefillR || ex.reps}" style="width:62px" value="${sLog.r || ''}" data-key="${ei}-${s}" data-field="r" onchange="logSet(this)" onfocus="if(!this.value&&'${prefillR}')this.value='${prefillR}'">`;
-      html += `<div class="set-check${isDone ? ' done' : ''}" data-key="${ei}-${s}" data-skip-timer="${skipTimer}" onclick="toggleSet(this,'${ex.rest}','${ex.name}',${ei},${s})"></div></div>`;
+      html += `<div class="set-check${isDone ? ' done' : ''}" data-key="${ei}-${s}" data-skip-timer="${skipTimer}" onclick="toggleSet(this,'${ex.rest}','${displayName.replace(/'/g,"\\'")}',${ei},${s})"></div></div>`;
       const wsWeight = sLog.w || prefill;
       const wsPlates = wsWeight ? formatPlatesCompact(parseFloat(wsWeight)) : '';
       if (wsPlates) html += `<div class="wu-plates">↳ ${wsPlates} na stranu</div>`;
@@ -1306,6 +1385,45 @@ function playBeep() {
   } catch(e) {}
   // Vibrate on timer end
   if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 300]);
+}
+
+// ==================== EXERCISE ALTERNATIVES ====================
+function getExDisplayName(originalName) {
+  return S.alts[originalName] || originalName;
+}
+
+let currentAltExercise = null;
+
+function openAltSheet(originalName) {
+  currentAltExercise = originalName;
+  const alts = ALTERNATIVES[originalName];
+  if (!alts) return;
+  const current = S.alts[originalName] || null;
+  document.getElementById('alt-sheet-title').textContent = 'Alternativy: ' + originalName;
+  let html = `<button class="alt-option${!current ? ' sel' : ''}" onclick="selectAlt('${originalName.replace(/'/g,"\\'")}', null)">${originalName}<div class="alt-orig">Původní cvik</div></button>`;
+  alts.forEach(alt => {
+    html += `<button class="alt-option${current === alt ? ' sel' : ''}" onclick="selectAlt('${originalName.replace(/'/g,"\\'")}', '${alt.replace(/'/g,"\\'")}')">${alt}</button>`;
+  });
+  document.getElementById('alt-sheet-options').innerHTML = html;
+  document.getElementById('alt-overlay').classList.add('active');
+  requestAnimationFrame(() => document.getElementById('alt-sheet').classList.add('active'));
+}
+
+function closeAltSheet() {
+  document.getElementById('alt-sheet').classList.remove('active');
+  setTimeout(() => document.getElementById('alt-overlay').classList.remove('active'), 300);
+  currentAltExercise = null;
+}
+
+function selectAlt(originalName, altName) {
+  if (altName) {
+    S.alts[originalName] = altName;
+  } else {
+    delete S.alts[originalName];
+  }
+  save('alts', S.alts);
+  closeAltSheet();
+  renderDay();
 }
 
 // ==================== PROGRESS ====================
