@@ -810,6 +810,8 @@ let program = null;
 let timerInterval = null;
 let timerSeconds = 0;
 let timerTotal = 0;
+let timerEndTime = 0;
+let wakeLockSentinel = null;
 
 function save(key, val) { try { localStorage.setItem('pb_' + key, JSON.stringify(val)); } catch(e) { console.warn('localStorage full or unavailable', e); } }
 
@@ -1267,19 +1269,24 @@ function parseRestTime(rest) {
 function startTimer(secs, label) {
   timerTotal = secs;
   timerSeconds = secs;
+  timerEndTime = Date.now() + secs * 1000;
   document.getElementById('timer').classList.add('active');
   document.getElementById('timer-label').textContent = label || 'Odpočinek';
   updateTimerDisplay();
   clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    timerSeconds--;
-    updateTimerDisplay();
-    if (timerSeconds <= 0) {
-      clearInterval(timerInterval);
-      playBeep();
-      setTimeout(() => document.getElementById('timer').classList.remove('active'), 1500);
-    }
-  }, 1000);
+  timerInterval = setInterval(timerTick, 1000);
+  requestWakeLock();
+}
+
+function timerTick() {
+  timerSeconds = Math.round((timerEndTime - Date.now()) / 1000);
+  updateTimerDisplay();
+  if (timerSeconds <= 0) {
+    clearInterval(timerInterval);
+    playBeep();
+    releaseWakeLock();
+    setTimeout(() => document.getElementById('timer').classList.remove('active'), 1500);
+  }
 }
 
 function updateTimerDisplay() {
@@ -1291,8 +1298,8 @@ function updateTimerDisplay() {
   document.getElementById('timer-arc').setAttribute('stroke-dashoffset', offset);
 }
 
-function timerAdd(s) { timerSeconds = Math.max(0, timerSeconds + s); timerTotal = Math.max(timerTotal, timerSeconds); updateTimerDisplay(); }
-function timerDismiss() { clearInterval(timerInterval); document.getElementById('timer').classList.remove('active'); }
+function timerAdd(s) { timerEndTime += s * 1000; timerSeconds = Math.max(0, Math.round((timerEndTime - Date.now()) / 1000)); timerTotal = Math.max(timerTotal, timerSeconds); updateTimerDisplay(); }
+function timerDismiss() { clearInterval(timerInterval); releaseWakeLock(); document.getElementById('timer').classList.remove('active'); }
 
 function playBeep() {
   try {
@@ -1307,6 +1314,23 @@ function playBeep() {
   // Vibrate on timer end
   if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 300]);
 }
+
+// Wake Lock to keep screen on during timer
+async function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    try { wakeLockSentinel = await navigator.wakeLock.request('screen'); } catch(e) {}
+  }
+}
+function releaseWakeLock() {
+  if (wakeLockSentinel) { wakeLockSentinel.release().catch(() => {}); wakeLockSentinel = null; }
+}
+
+// Re-sync timer when returning from locked screen / background tab
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && timerInterval) {
+    timerTick();
+  }
+});
 
 // ==================== PROGRESS ====================
 function renderProgress() {
