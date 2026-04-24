@@ -920,20 +920,55 @@ E('Lean-Away Lateral Raise',0,2,'30',null,10,'1-2','Lehký DB',['sh']),
 E('Bicycle Crunch',0,2,'10-12',null,9,'1-2','Ruce za uši',['co'])]}]
 };
 
+// ========== Goal-based transform ==========
+// Base P4 plan is the "both" hybrid (strength + hypertrophy). For pure strength
+// we trim accessory volume; for pure hypertrophy we de-load main lifts (lower %1RM)
+// and add accessory volume. Peak-testing week (type 'testing') is left intact so
+// PR benchmarks stay comparable across goals.
+function scalePct(pct, factor) {
+  if (pct == null) return pct;
+  return String(pct).replace(/\d+(?:\.\d+)?/g, m => {
+    const v = parseFloat(m) * factor;
+    return (Math.round(v * 2) / 2).toString();
+  });
+}
+function transformExercise(ex, goal, weekType) {
+  const isMain = ex.pct != null;
+  const out = {...ex};
+  if (goal === 'strength') {
+    if (!isMain && out.working >= 3) out.working = out.working - 1;
+  } else if (goal === 'hypertrophy') {
+    if (isMain && weekType !== 'deload') out.pct = scalePct(out.pct, 0.92);
+    if (!isMain && out.working <= 3) out.working = out.working + 1;
+  }
+  return out;
+}
+function applyGoalTransform(weeks, goal) {
+  if (goal === 'both' || !goal) return weeks;
+  return weeks.map(wk => {
+    if (wk.type === 'testing') return wk;
+    return {...wk, days: wk.days.map(day => ({
+      ...day,
+      exercises: day.exercises.map(ex => transformExercise(ex, goal, wk.type))
+    }))};
+  });
+}
+
 // ========== Build variant programs ==========
-function buildProgram(freq) {
-  if (freq === '4x') return P4;
-  if (freq === '5-6x') {
-    return P4.map((wk, i) => {
+function buildProgram(freq, goal) {
+  let base;
+  if (freq === '4x') base = P4;
+  else if (freq === '5-6x') {
+    base = P4.map((wk, i) => {
       const wn = i + 1;
       const copy = {type:wk.type, label:wk.label, days:[...wk.days]};
       if (wn % 2 === 1 && wn <= 9) copy.days.push(ARM_DAY);
       if (EXTRA_56[wn]) copy.days.push(...EXTRA_56[wn]);
       return copy;
     });
-  }
-  // 2x variant – simplified
-  return P4.map((wk, i) => {
+  } else {
+    // 2x variant – simplified
+    base = P4.map((wk, i) => {
     const wn = i + 1;
     const sq = wk.days.find(d => d.exercises.some(e => e.name.includes('Squat') && e.pct));
     const bp = wk.days.find(d => d.exercises.some(e => e.name.includes('Bench Press') && e.pct));
@@ -959,7 +994,9 @@ function buildProgram(freq) {
         E('Standing Calf Raise',0,2,'8-10',null,9,'1-2','Plný ROM',['ca']),
         E('Hanging Leg Raise',0,2,'10-12',null,8,'1-2','Kontrolovaně',['co'])]}
     ]};
-  });
+    });
+  }
+  return applyGoalTransform(base, goal);
 }
 
 // ==================== APP STATE ====================
@@ -1023,7 +1060,7 @@ function initApp() {
   document.getElementById('onboarding').classList.remove('active');
   document.getElementById('app').classList.add('active');
   document.getElementById('bnav').style.display = 'flex';
-  program = buildProgram(S.ob.freq);
+  program = buildProgram(S.ob.freq, S.ob.goal);
   document.getElementById('prog-sub').textContent = S.ob.freq + ' týdně • ' + {strength:'Síla',hypertrophy:'Hypertrofie',both:'Síla + Hypertrofie'}[S.ob.goal];
   document.getElementById('set-sq').value = S.settings.sq;
   document.getElementById('set-bp').value = S.settings.bp;
