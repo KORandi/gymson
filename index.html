@@ -920,48 +920,62 @@ E('Lean-Away Lateral Raise',0,2,'30',null,10,'1-2','Lehký DB',['sh']),
 E('Bicycle Crunch',0,2,'10-12',null,9,'1-2','Ruce za uši',['co'])]}]
 };
 
-// ========== Goal-based transform ==========
-// Base P4 plan is the "both" hybrid (strength + hypertrophy). For pure strength
-// we trim accessory volume; for pure hypertrophy we de-load main lifts (lower %1RM)
-// and add accessory volume. Peak-testing week (type 'testing') is left intact so
-// PR benchmarks stay comparable across goals.
-function scalePct(pct, factor) {
-  if (pct == null) return pct;
-  return String(pct).replace(/\d+(?:\.\d+)?/g, m => {
-    const v = parseFloat(m) * factor;
-    return (Math.round(v * 2) / 2).toString();
-  });
-}
-function transformExercise(ex, goal, weekType) {
-  const isMain = ex.pct != null;
-  const out = {...ex};
+// ========== Week 10B (competitive powerlifter max test) – STUB ==========
+// Replace loads below with exact numbers from Jeff Nippard's Powerbuilding PDF.
+// Structure: 3 training days, one heavy attempt triple (opener / 2nd / 3rd) per lift,
+// minimal accessory volume, true competition-style peak.
+const W10B = {
+  type:'testing', label:'Týden 10B – Max Test (Soutěžní)', originalWeek:10, days:[
+    {name:'Squat 1RM Attempts',exercises:[
+      E('Back Squat',5,1,'1','90',9,'4-5','Opener – pohodová 1RM, ~90 % tréninkového max',['qu','gl']),
+      E('Back Squat',0,1,'1','95',9.5,'4-5','2. pokus – ~95 % max, těžké ale jisté',['qu','gl']),
+      E('Back Squat',0,1,'1','100',10,'4-5','3. pokus – new 1RM attempt (TODO: doplň % z PDF)',['qu','gl']),
+      E('Leg Curl',1,2,'8-10',null,7,'2-3','Lehce, jen aktivace',['hm']),
+      E('Hanging Leg Raise',0,2,'10-12',null,7,'1-2','Kolena k hrudníku',['co'])]},
+    {name:'Bench 1RM Attempts',exercises:[
+      E('Barbell Bench Press',5,1,'1','90',9,'4-5','Opener – pauza na hrudníku',['ch','tr']),
+      E('Barbell Bench Press',0,1,'1','95',9.5,'4-5','2. pokus',['ch','tr']),
+      E('Barbell Bench Press',0,1,'1','100',10,'4-5','3. pokus – new 1RM attempt (TODO: doplň % z PDF)',['ch','tr']),
+      E('Chest-Supported DB Row',1,2,'10',null,6,'2-3','Lehká aktivace zad',['bk']),
+      E('Triceps Pressdown',0,2,'12-15',null,7,'1-2','Lehce',['tr'])]},
+    {name:'Deadlift 1RM Attempts',exercises:[
+      E('Deadlift',5,1,'1','90',9,'4-5','Opener – soutěžní styl, krátký setup',['bk','hm','gl']),
+      E('Deadlift',0,1,'1','95',9.5,'4-5','2. pokus',['bk','hm','gl']),
+      E('Deadlift',0,1,'1','100',10,'4-5','3. pokus – new 1RM attempt (TODO: doplň % z PDF)',['bk','hm','gl']),
+      E('Overhead Press',2,2,'6',null,6,'2-3','Lehce, reset každý rep',['sh','tr']),
+      E('Bicycle Crunch',0,2,'12-15',null,7,'1-2','Kontrolovaně',['co'])]}
+  ]
+};
+
+// ========== Goal-based week filter ==========
+// Jeff Nippard labels odd weeks (1,3,5,7,9) as strength/powerlifting-focused
+// and even weeks (2,4,6,8) as hypertrophy/bodybuilding-focused. Users who want
+// only one side get a filtered slice; "both" keeps the full 11-week cycle.
+function filterWeeksByGoal(weeks, goal) {
   if (goal === 'strength') {
-    if (!isMain && out.working >= 3) out.working = out.working - 1;
-  } else if (goal === 'hypertrophy') {
-    if (isMain && weekType !== 'deload') out.pct = scalePct(out.pct, 0.92);
-    if (!isMain && out.working <= 3) out.working = out.working + 1;
+    return weeks.filter(wk => {
+      const wn = wk.originalWeek;
+      return (wn % 2 === 1 && wn <= 9) || wn === 10 || wn === 11;
+    });
   }
-  return out;
-}
-function applyGoalTransform(weeks, goal) {
-  if (goal === 'both' || !goal) return weeks;
-  return weeks.map(wk => {
-    if (wk.type === 'testing') return wk;
-    return {...wk, days: wk.days.map(day => ({
-      ...day,
-      exercises: day.exercises.map(ex => transformExercise(ex, goal, wk.type))
-    }))};
-  });
+  if (goal === 'hypertrophy') {
+    return weeks.filter(wk => {
+      const wn = wk.originalWeek;
+      return (wn % 2 === 0 && wn <= 8) || wn === 11;
+    });
+  }
+  return weeks;
 }
 
 // ========== Build variant programs ==========
 function buildProgram(freq, goal) {
   let base;
-  if (freq === '4x') base = P4;
-  else if (freq === '5-6x') {
+  if (freq === '4x') {
+    base = P4.map((wk, i) => ({...wk, originalWeek: i + 1}));
+  } else if (freq === '5-6x') {
     base = P4.map((wk, i) => {
       const wn = i + 1;
-      const copy = {type:wk.type, label:wk.label, days:[...wk.days]};
+      const copy = {type: wk.type, label: wk.label, originalWeek: wn, days: [...wk.days]};
       if (wn % 2 === 1 && wn <= 9) copy.days.push(ARM_DAY);
       if (EXTRA_56[wn]) copy.days.push(...EXTRA_56[wn]);
       return copy;
@@ -978,7 +992,7 @@ function buildProgram(freq, goal) {
     const dlE = dl ? dl.exercises.find(e => (e.name.includes('Deadlift') && !e.name.includes('Pause')) && e.pct) : null;
     const dlE2 = dl ? dl.exercises.find(e => e.name.includes('Deadlift') && e.pct) : null;
     const useDL = dlE || dlE2;
-    return {type:'2xfullbody',label:wk.label.replace(/Full Body|Upper\/Lower/,'2× Full Body'),days:[
+    return {type:'2xfullbody',label:wk.label.replace(/Full Body|Upper\/Lower/,'2× Full Body'),originalWeek:wn,days:[
       {name:'Full Body A – Squat / Bench',exercises:[
         sqE ? E('Back Squat',3,Math.min(sqE.working,3),sqE.reps,sqE.pct,sqE.rpe,'2-3',sqE.note,['qu','gl']) : E('Back Squat',3,3,'5','75',null,'2-3','Technika a kontrola',['qu','gl']),
         bpE ? E('Barbell Bench Press',3,Math.min(bpE.working,3),bpE.reps,bpE.pct,bpE.rpe,'2-3',bpE.note,['ch','tr']) : E('Barbell Bench Press',3,3,'5','75',null,'2-3','Kontrolovaně',['ch','tr']),
@@ -996,7 +1010,13 @@ function buildProgram(freq, goal) {
     ]};
     });
   }
-  return applyGoalTransform(base, goal);
+  // Swap in 10B if user picked competitive test mode (Etapa D)
+  const testMode = (S && S.ob && S.ob.testMode) || '10A';
+  if (testMode === '10B') {
+    const i10 = base.findIndex(wk => wk.originalWeek === 10);
+    if (i10 !== -1) base[i10] = W10B;
+  }
+  return filterWeeksByGoal(base, goal);
 }
 
 // ==================== APP STATE ====================
@@ -1094,7 +1114,12 @@ function selectDay(i) {
 // ==================== RENDER ====================
 function renderWeek() {
   const wk = program[S.cur.week];
-  document.getElementById('wk-num').textContent = 'Týden ' + (S.cur.week + 1);
+  const filtered = S.ob && S.ob.goal && S.ob.goal !== 'both';
+  const numLabel = filtered
+    ? `Týden ${S.cur.week + 1} z ${program.length}`
+    : `Týden ${S.cur.week + 1}`;
+  const subLabel = filtered ? ` · původně ${wk.originalWeek}` : '';
+  document.getElementById('wk-num').textContent = numLabel + subLabel;
   document.getElementById('wk-type').textContent = wk.type === 'fullbody' ? 'Full Body' : wk.type === 'upperlower' ? 'Upper/Lower' : wk.type === 'testing' ? 'Max Test' : wk.type === 'deload' ? 'Deload' : '2× Full Body';
   document.getElementById('wk-prev').disabled = S.cur.week === 0;
   document.getElementById('wk-next').disabled = S.cur.week === program.length - 1;
