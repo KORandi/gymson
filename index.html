@@ -42,6 +42,26 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .goal-selector .goal-opt{flex:1;padding:10px;background:var(--bg3);border:2px solid var(--brd);border-radius:10px;color:var(--txt);font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.3px;transition:.2s}
 .goal-selector .goal-opt.active{border-color:var(--acc);background:#1c1510;color:var(--acc)}
 .goal-desc{font-size:12px;color:var(--txt2);margin-top:4px;line-height:1.4}
+.session-hdr{background:var(--bg2);border:1px solid var(--brd);border-radius:10px;padding:8px 10px;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.feel-lbl{font-size:11px;color:var(--txt2);font-weight:600;letter-spacing:.3px}
+.feel-btns{display:flex;gap:4px}
+.feel-btns button{padding:5px 9px;font-size:12px;border:1px solid var(--brd);border-radius:6px;background:var(--bg3);color:var(--txt);font-family:'Barlow Condensed',sans-serif;font-weight:600}
+.feel-btns button.active{border-color:var(--acc);background:#1c1510;color:var(--acc)}
+.rpe-help-btn{margin-left:auto;padding:4px 10px;font-size:11px;background:none;color:var(--txt2);border:1px solid var(--brd);border-radius:6px}
+.rpe-help-btn:hover{color:var(--acc);border-color:var(--acc)}
+.set-row .rpe-at{color:var(--txt2);font-size:13px;margin:0 3px}
+.set-row .rpe-input{width:46px;padding:6px 2px;background:var(--bg3);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:14px;text-align:center}
+.bracket-hint{background:#0e1a0e;border:1px solid #2a5f2a;border-radius:8px;padding:8px 10px;font-size:12px;color:#9fe69f;margin-bottom:8px;line-height:1.4;display:flex;gap:8px;align-items:flex-start}
+.bracket-hint .close-x{margin-left:auto;background:none;color:#9fe69f;font-size:16px;padding:0 4px;cursor:pointer}
+.ex-range{display:block;font-size:11px;color:var(--txt2);margin-top:2px}
+.help-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:260;align-items:center;justify-content:center;padding:20px}
+.help-overlay.active{display:flex}
+.help-modal{background:var(--bg2);border-radius:12px;padding:18px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;border:1px solid var(--brd)}
+.help-modal h3{font-family:'Barlow Condensed',sans-serif;color:var(--acc);margin-bottom:10px;font-size:18px;letter-spacing:.5px}
+.help-modal table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px}
+.help-modal td{padding:6px 4px;border-bottom:1px solid var(--brd)}
+.help-modal td:first-child{font-weight:700;color:var(--acc);width:70px}
+.help-modal .help-close{width:100%;margin-top:10px;padding:10px;background:var(--acc);color:#fff;border-radius:8px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:.5px}
 .ob-warn{background:#1a1200;border:1px solid var(--warn);border-radius:10px;padding:14px;font-size:13px;color:var(--warn);line-height:1.5;text-align:left;margin-top:8px}
 .ob-warn2{background:#1a0800;border:1px solid var(--err);border-radius:10px;padding:14px;font-size:13px;color:var(--err);line-height:1.5;text-align:left;margin-top:8px}
 .ob-input-row{display:flex;gap:8px;width:100%;align-items:center}
@@ -366,6 +386,24 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
     <button class="alt-sheet-close" onclick="closeAltSheet()">&times;</button>
   </div>
   <div id="alt-sheet-options"></div>
+</div>
+
+<div id="rpe-help-overlay" class="help-overlay" onclick="if(event.target===this)closeRpeHelp()">
+<div class="help-modal">
+<h3>RPE ↔ RIR (Reps In Reserve)</h3>
+<p style="font-size:12px;color:var(--txt2);margin-bottom:10px;line-height:1.4">RPE = Rate of Perceived Exertion. Odhad, kolik repů ti zbývalo do selhání:</p>
+<table>
+<tr><td>RPE 10</td><td>Maximální úsilí – 0 repů v rezervě</td></tr>
+<tr><td>RPE 9.5</td><td>Mohl/a bys přidat váhu, 0 RIR</td></tr>
+<tr><td>RPE 9</td><td>1 RIR</td></tr>
+<tr><td>RPE 8.5</td><td>Určitě 1, možná 2 RIR</td></tr>
+<tr><td>RPE 8</td><td>2 RIR</td></tr>
+<tr><td>RPE 7.5</td><td>Určitě 2, možná 3 RIR</td></tr>
+<tr><td>RPE 7</td><td>3 RIR</td></tr>
+</table>
+<p style="font-size:11px;color:var(--txt2);line-height:1.4">Zadej skutečné RPE, které jsi cítil/a po sérii — pomáhá to s autoregulací v dalších týdnech.</p>
+<button class="help-close" onclick="closeRpeHelp()">Rozumím</button>
+</div>
 </div>
 
 <!-- BOTTOM NAV -->
@@ -1048,6 +1086,19 @@ let program = null;
 let timerInterval = null;
 let timerSeconds = 0;
 let timerTotal = 0;
+let feelMode = 'mid'; // 'low' | 'mid' | 'high' — transient per session
+
+function setFeel(m) {
+  feelMode = m;
+  renderDay();
+}
+function openRpeHelp() { document.getElementById('rpe-help-overlay').classList.add('active'); }
+function closeRpeHelp() { document.getElementById('rpe-help-overlay').classList.remove('active'); }
+function dismissBracketHint() {
+  try { localStorage.setItem('pb_bracket_hint_seen', '1'); } catch(e) {}
+  const el = document.getElementById('bracket-hint');
+  if (el) el.style.display = 'none';
+}
 
 function save(key, val) { try { localStorage.setItem('pb_' + key, JSON.stringify(val)); } catch(e) { console.warn('localStorage full or unavailable', e); } }
 
@@ -1187,6 +1238,23 @@ function renderDay() {
 
   const { done: setsDone, total: setsTotal } = countSets(day, log);
   let html = `<h3 style="padding:4px 0 8px;font-size:16px;color:var(--acc)">${day.name}</h3>`;
+  // Feeling toggle + RPE help
+  html += `<div class="session-hdr">`;
+  html += `<span class="feel-lbl">DNES SE CÍTÍM:</span>`;
+  html += `<div class="feel-btns">`;
+  ['low','mid','high'].forEach(m => {
+    const label = {low:'Špatně',mid:'OK',high:'Skvěle'}[m];
+    html += `<button class="${feelMode === m ? 'active' : ''}" onclick="setFeel('${m}')">${label}</button>`;
+  });
+  html += `</div>`;
+  html += `<button class="rpe-help-btn" onclick="openRpeHelp()">RPE = ?</button>`;
+  html += `</div>`;
+  // One-time bracket hint (only on days with %1RM range)
+  const hasBracket = day.exercises.some(e => e.pct && e.pct.includes('-'));
+  const bracketHintSeen = (() => { try { return !!localStorage.getItem('pb_bracket_hint_seen'); } catch(e) { return false; }})();
+  if (hasBracket && !bracketHintSeen) {
+    html += `<div id="bracket-hint" class="bracket-hint"><span>💡</span><span>Rozsah <strong>X-Y %1RM</strong> je autoregulace: špatný den → low (vlevo), skvělý den → high (vpravo). Přepínač <strong>DNES SE CÍTÍM</strong> nahoře nastaví předvyplnění.</span><button class="close-x" onclick="dismissBracketHint()">×</button></div>`;
+  }
   html += `<div class="workout-progress"><span class="wp-text">${setsDone}/${setsTotal} sérií</span><div class="wp-bar"><div class="wp-fill" style="width:${setsTotal ? (setsDone/setsTotal)*100 : 0}%"></div></div><span class="wp-text">${setsTotal ? Math.round((setsDone/setsTotal)*100) : 0}%</span></div>`;
 
   day.exercises.forEach((ex, ei) => {
@@ -1237,15 +1305,18 @@ function renderDay() {
     const isSSPair = isSS && nextEx && nextEx.ss && ex.ss[0] === nextEx.ss[0];
     for (let s = 0; s < ex.working; s++) {
       const sLog = log[`${ei}-${s}`] || {};
-      const prefill = sLog.w || (prevLog && prevLog[s] ? prevLog[s].w : '') || (calcWeight ? calcWeight.split('-')[0] : '');
+      const prefill = sLog.w || (prevLog && prevLog[s] ? prevLog[s].w : '') || pickFromBracket(calcWeight, feelMode);
       const prefillR = sLog.r || (prevLog && prevLog[s] ? prevLog[s].r : '') || '';
       const isDone = sLog.done;
       const isLastSet = s === ex.working - 1;
       const skipTimer = isSSPair && isLastSet ? '1' : '0';
+      const rpePlaceholder = ex.rpe || '';
       html += `<div class="set-row"><span class="set-label">${s + 1}</span>`;
       html += `<input class="set-input${!sLog.w && prefill ? ' prefilled' : ''}" type="number" inputmode="decimal" step="2.5" value="${sLog.w || ''}" data-key="${ei}-${s}" data-field="w" onchange="logSet(this)" onfocus="if(!this.value&&'${prefill}')this.value='${prefill}'" ${prefill && !sLog.w ? `placeholder="${prefill}"` : ''}>`;
       html += `<span class="set-unit">kg</span><span class="set-x">×</span>`;
-      html += `<input class="set-input" type="number" inputmode="numeric" placeholder="${prefillR || ex.reps}" style="width:62px" value="${sLog.r || ''}" data-key="${ei}-${s}" data-field="r" onchange="logSet(this)" onfocus="if(!this.value&&'${prefillR}')this.value='${prefillR}'">`;
+      html += `<input class="set-input" type="number" inputmode="numeric" placeholder="${prefillR || ex.reps}" style="width:58px" value="${sLog.r || ''}" data-key="${ei}-${s}" data-field="r" onchange="logSet(this)" onfocus="if(!this.value&&'${prefillR}')this.value='${prefillR}'">`;
+      html += `<span class="rpe-at">@</span>`;
+      html += `<input class="rpe-input" type="number" inputmode="decimal" step="0.5" min="1" max="10" placeholder="${rpePlaceholder}" value="${sLog.rpe || ''}" data-key="${ei}-${s}" data-field="rpe" onchange="logSet(this)">`;
       html += `<div class="set-check${isDone ? ' done' : ''}" data-key="${ei}-${s}" data-skip-timer="${skipTimer}" onclick="toggleSet(this,'${ex.rest}','${displayName.replace(/'/g,"\\'")}',${ei},${s})"></div></div>`;
       const wsWeight = sLog.w || prefill;
       const wsPlates = wsWeight ? formatPlatesCompact(parseFloat(wsWeight)) : '';
@@ -1357,6 +1428,15 @@ function getCalcWeight(ex, originalName) {
   return String(w);
 }
 
+// Pick a single suggested weight from a "lo-hi" bracket based on how the user feels.
+// PDF teaches: bad days → low end. Our default ("mid") also picks low for safety.
+function pickFromBracket(calcWeight, feel) {
+  if (!calcWeight) return '';
+  const parts = String(calcWeight).split('-');
+  if (parts.length < 2) return parts[0];
+  return feel === 'high' ? parts[1] : parts[0];
+}
+
 // ==================== LOGGING ====================
 function logSet(input) {
   const key = S.cur.week + '-' + S.cur.day;
@@ -1386,7 +1466,7 @@ function toggleSet(el, restTime, exName, ei, si) {
   const done = !S.logs[key][sk].done;
   S.logs[key][sk].done = done;
   el.classList.toggle('done', done);
-  // Fill weight and reps from input if empty
+  // Fill weight, reps and RPE from inputs if empty
   const row = el.parentElement;
   const inputs = row.querySelectorAll('.set-input');
   if (done && inputs[0] && !S.logs[key][sk].w && inputs[0].value) {
@@ -1394,6 +1474,10 @@ function toggleSet(el, restTime, exName, ei, si) {
   }
   if (done && inputs[1] && !S.logs[key][sk].r && inputs[1].value) {
     S.logs[key][sk].r = parseFloat(inputs[1].value);
+  }
+  const rpeInput = row.querySelector('.rpe-input');
+  if (done && rpeInput && !S.logs[key][sk].rpe && rpeInput.value) {
+    S.logs[key][sk].rpe = parseFloat(rpeInput.value);
   }
   save('logs', S.logs);
   // Check PR
