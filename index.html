@@ -62,6 +62,13 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .help-modal td{padding:6px 4px;border-bottom:1px solid var(--brd)}
 .help-modal td:first-child{font-weight:700;color:var(--acc);width:70px}
 .help-modal .help-close{width:100%;margin-top:10px;padding:10px;background:var(--acc);color:#fff;border-radius:8px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:.5px}
+.focus-banner{background:linear-gradient(90deg,#1c1510,transparent);border-left:3px solid var(--acc);padding:8px 12px;font-size:13px;color:var(--txt);margin-bottom:8px;line-height:1.4}
+.focus-banner b{color:var(--acc);text-transform:uppercase;letter-spacing:.3px;font-size:11px;display:block;margin-bottom:2px}
+.hist-select{width:100%;padding:10px;background:var(--bg3);border:1px solid var(--brd);border-radius:8px;color:var(--txt);font-size:14px;margin-bottom:10px}
+.hist-row{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg3);border:1px solid var(--brd);border-radius:8px;margin-bottom:6px;font-size:13px}
+.hist-row .hr-main{font-weight:600}
+.hist-row .hr-sub{color:var(--txt2);font-size:11px}
+.hist-row .hr-est{color:var(--acc);font-weight:700;font-family:'Barlow Condensed',sans-serif}
 .ob-warn{background:#1a1200;border:1px solid var(--warn);border-radius:10px;padding:14px;font-size:13px;color:var(--warn);line-height:1.5;text-align:left;margin-top:8px}
 .ob-warn2{background:#1a0800;border:1px solid var(--err);border-radius:10px;padding:14px;font-size:13px;color:var(--err);line-height:1.5;text-align:left;margin-top:8px}
 .ob-input-row{display:flex;gap:8px;width:100%;align-items:center}
@@ -343,6 +350,16 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 <div class="set-field"><label>Overhead Press (kg)</label><input type="number" inputmode="decimal" id="set-ohp" min="0" step="2.5" onchange="save1RM()"></div>
 </div>
 <div class="set-section">
+<h3>📊 Historie cviků</h3>
+<p style="font-size:12px;color:var(--txt2);margin-bottom:8px">Vyber cvik – uvidíš všechny uložené série a odhadované 1RM (Epley).</p>
+<select class="hist-select" id="ex-hist-select" onchange="renderExHistory()"><option value="">-- vyber cvik --</option></select>
+<div id="ex-hist-list"></div>
+</div>
+<div class="set-section">
+<h3>ℹ️ O programu</h3>
+<button class="btn btn-sm btn-ghost" onclick="openDisclaimer()">Zobrazit disclaimer & kredit</button>
+</div>
+<div class="set-section">
 <h3>💾 Záloha dat</h3>
 <div style="display:flex;gap:8px;flex-wrap:wrap">
 <button class="btn btn-sm btn-ghost" onclick="exportData()">Exportovat data</button>
@@ -386,6 +403,17 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
     <button class="alt-sheet-close" onclick="closeAltSheet()">&times;</button>
   </div>
   <div id="alt-sheet-options"></div>
+</div>
+
+<div id="disclaimer-overlay" class="help-overlay" onclick="if(event.target===this)closeDisclaimer()">
+<div class="help-modal">
+<h3>PŘED ZAČÁTKEM PROGRAMU</h3>
+<p style="font-size:13px;line-height:1.5;color:var(--txt);margin-bottom:10px">Tento plán je adaptací <strong>Powerbuilding System</strong> od <strong>Jeffa Nipparda</strong> (2020). Je navržený pro <strong>středně pokročilé až pokročilé</strong> liftery s 2+ lety konzistentního strukturovaného tréninku.</p>
+<p style="font-size:13px;line-height:1.5;color:var(--txt);margin-bottom:10px">Pokud jsi <strong>začátečník</strong>, jednodušší lineární progres program ti přinese rychlejší výsledky s nižším rizikem zranění.</p>
+<p style="font-size:13px;line-height:1.5;color:var(--txt);margin-bottom:10px">Před zahájením jakéhokoli tréninkového programu zvaž konzultaci s lékařem, zejména pokud máš historii zranění. Tato aplikace není náhradou za osobní vedení trenérem.</p>
+<p style="font-size:11px;line-height:1.4;color:var(--txt2);font-style:italic">Credit: Powerbuilding System od Jeffa Nipparda, 2020. Tato appka je neoficiální nástroj pro osobní použití.</p>
+<button class="help-close" onclick="closeDisclaimer()">Rozumím, pokračovat</button>
+</div>
 </div>
 
 <div id="rpe-help-overlay" class="help-overlay" onclick="if(event.target===this)closeRpeHelp()">
@@ -1094,6 +1122,24 @@ function setFeel(m) {
 }
 function openRpeHelp() { document.getElementById('rpe-help-overlay').classList.add('active'); }
 function closeRpeHelp() { document.getElementById('rpe-help-overlay').classList.remove('active'); }
+function openDisclaimer() { document.getElementById('disclaimer-overlay').classList.add('active'); }
+function closeDisclaimer() {
+  document.getElementById('disclaimer-overlay').classList.remove('active');
+  try { localStorage.setItem('pb_disclaimer_seen', '1'); } catch(e) {}
+}
+function getDayFocus(day, wk) {
+  const ex0 = day.exercises[0];
+  const parts = [];
+  if (ex0) {
+    if (ex0.pct) parts.push(`${ex0.name} top set ${ex0.pct}%`);
+    else if (ex0.rpe) parts.push(`${ex0.name} @ RPE ${ex0.rpe}`);
+    else parts.push(ex0.name);
+  }
+  if (wk.originalWeek === 6) parts.unshift('Semi-deload – nižší objem, žádné selhání');
+  else if (wk.type === 'deload') parts.unshift('Plný deload – lehké váhy, mentální reset');
+  else if (wk.type === 'testing') parts.unshift('Max test – vždy se spotter!');
+  return parts.join(' · ');
+}
 function dismissBracketHint() {
   try { localStorage.setItem('pb_bracket_hint_seen', '1'); } catch(e) {}
   const el = document.getElementById('bracket-hint');
@@ -1153,6 +1199,7 @@ function initApp() {
   document.getElementById('set-dl').value = S.settings.dl;
   document.getElementById('set-ohp').value = S.settings.ohp;
   renderGoalSelector();
+  populateExHistorySelect();
   renderWeek();
 }
 
@@ -1238,6 +1285,8 @@ function renderDay() {
 
   const { done: setsDone, total: setsTotal } = countSets(day, log);
   let html = `<h3 style="padding:4px 0 8px;font-size:16px;color:var(--acc)">${day.name}</h3>`;
+  const focus = getDayFocus(day, wk);
+  if (focus) html += `<div class="focus-banner"><b>Dnešní focus</b>${focus}</div>`;
   // Feeling toggle + RPE help
   html += `<div class="session-hdr">`;
   html += `<span class="feel-lbl">DNES SE CÍTÍM:</span>`;
@@ -1814,7 +1863,51 @@ function changeGoal(g) {
   program = buildProgram(S.ob.freq, S.ob.goal);
   document.getElementById('prog-sub').textContent = S.ob.freq + ' týdně • ' + {strength:'Síla',hypertrophy:'Hypertrofie',both:'Síla + Hypertrofie'}[S.ob.goal];
   renderGoalSelector();
+  populateExHistorySelect();
   renderWeek();
+}
+
+function populateExHistorySelect() {
+  const sel = document.getElementById('ex-hist-select');
+  if (!sel || !program) return;
+  const names = new Set();
+  program.forEach(wk => wk.days.forEach(d => d.exercises.forEach(e => names.add(e.name))));
+  // Also include aliases from S.alts in case user has selected alternatives
+  Object.values(S.alts || {}).forEach(n => n && names.add(n));
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">-- vyber cvik --</option>' +
+    [...names].sort().map(n => `<option value="${n.replace(/"/g,'&quot;')}"${n === currentVal ? ' selected' : ''}>${n}</option>`).join('');
+}
+function renderExHistory() {
+  const sel = document.getElementById('ex-hist-select');
+  const list = document.getElementById('ex-hist-list');
+  if (!sel || !list) return;
+  const name = sel.value;
+  if (!name) { list.innerHTML = ''; return; }
+  // Walk all history entries, match by exercise name in that week/day
+  const rows = [];
+  S.history.forEach(h => {
+    const log = S.logs[h.key]; if (!log) return;
+    const [wi, di] = h.key.split('-').map(Number);
+    const wk = program[wi]; if (!wk || !wk.days[di]) return;
+    const ei = wk.days[di].exercises.findIndex(e => {
+      const displayName = getExDisplayName(e.name);
+      return e.name === name || displayName === name;
+    });
+    if (ei === -1) return;
+    for (let s = 0; s < 10; s++) {
+      const sl = log[ei + '-' + s];
+      if (!sl || !sl.w || !sl.r) continue;
+      const est = Math.round(sl.w * (1 + sl.r / 30) * 10) / 10;
+      rows.push({ date: h.date, w: sl.w, r: sl.r, rpe: sl.rpe || null, est });
+    }
+  });
+  if (!rows.length) { list.innerHTML = '<p style="color:var(--txt2);font-size:12px">Žádné záznamy.</p>'; return; }
+  list.innerHTML = rows.map(r => {
+    const d = new Date(r.date).toLocaleDateString('cs-CZ');
+    const rpeTxt = r.rpe ? ` · RPE ${r.rpe}` : '';
+    return `<div class="hist-row"><div><div class="hr-main">${r.w} kg × ${r.r}${rpeTxt}</div><div class="hr-sub">${d}</div></div><div class="hr-est">~${r.est} kg e1RM</div></div>`;
+  }).join('');
 }
 
 function resetData() {
@@ -1857,6 +1950,10 @@ if ('serviceWorker' in navigator) {
 
 // ==================== BOOT ====================
 if (S.ob) initApp();
+// First-run disclaimer
+try {
+  if (!localStorage.getItem('pb_disclaimer_seen')) openDisclaimer();
+} catch(e) {}
 </script>
 </body>
 </html>
