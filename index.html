@@ -35,7 +35,13 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .ob-opt{width:100%;padding:16px;background:var(--bg2);border:2px solid var(--brd);border-radius:12px;color:var(--txt);font-size:16px;text-align:left;transition:.2s}
 .ob-opt.sel{border-color:var(--acc);background:#1c1510}
 @media(hover:hover){.ob-opt:hover{border-color:var(--acc);background:#1c1510}}
-.ob-opt .ob-desc{font-size:12px;color:var(--txt2);margin-top:4px}
+.ob-opt .ob-desc{font-size:12px;color:var(--txt2);margin-top:4px;display:block}
+.ob-opt.rec{border-color:var(--acc)}
+.rec-badge{display:inline-block;margin-left:8px;padding:2px 8px;background:var(--acc);color:#fff;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.5px;vertical-align:middle}
+.goal-selector{display:flex;gap:8px;margin-bottom:8px}
+.goal-selector .goal-opt{flex:1;padding:10px;background:var(--bg3);border:2px solid var(--brd);border-radius:10px;color:var(--txt);font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.3px;transition:.2s}
+.goal-selector .goal-opt.active{border-color:var(--acc);background:#1c1510;color:var(--acc)}
+.goal-desc{font-size:12px;color:var(--txt2);margin-top:4px;line-height:1.4}
 .ob-warn{background:#1a1200;border:1px solid var(--warn);border-radius:10px;padding:14px;font-size:13px;color:var(--warn);line-height:1.5;text-align:left;margin-top:8px}
 .ob-warn2{background:#1a0800;border:1px solid var(--err);border-radius:10px;padding:14px;font-size:13px;color:var(--err);line-height:1.5;text-align:left;margin-top:8px}
 .ob-input-row{display:flex;gap:8px;width:100%;align-items:center}
@@ -232,9 +238,9 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 <div class="ob-step" id="ob3">
 <h1 class="ob-title">CÍL</h1>
 <p class="ob-sub">Na co se chceš zaměřit?</p>
-<button class="ob-opt" onclick="obSetGoal('strength',this)">Síla</button>
-<button class="ob-opt" onclick="obSetGoal('hypertrophy',this)">Hypertrofie</button>
-<button class="ob-opt" onclick="obSetGoal('both',this)">Obojí</button>
+<button class="ob-opt" onclick="obSetGoal('strength',this)">Síla<span class="ob-desc">Jen liché týdny (1,3,5,7,9) — full body, těžké váhy, nízké repy, %1RM na Big 3. Plus peak a deload.</span></button>
+<button class="ob-opt" onclick="obSetGoal('hypertrophy',this)">Hypertrofie<span class="ob-desc">Jen sudé týdny (2,4,6,8) — upper/lower split, vyšší repy 8–20, RPE-based, víc izolace. Plus deload.</span></button>
+<button class="ob-opt rec" onclick="obSetGoal('both',this)">Obojí <span class="rec-badge">DOPORUČENO</span><span class="ob-desc">Celý 11-týdenní powerbuilding blok (Jeff Nippard, 2020) — střídání silového a hypertrofického týdne. Rozdělit plán na části je modifikace originálu.</span></button>
 <button class="btn" id="ob3next" disabled onclick="obStep(4)">Pokračovat</button>
 <button class="btn btn-ghost" onclick="obStep(2)">← Zpět</button>
 </div>
@@ -299,6 +305,15 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 <div style="font-size:20px;font-weight:700;color:var(--acc);margin:8px 0" id="calc-1rm"></div>
 <table class="pct-table"><thead><tr><th>%1RM</th><th>Váha (kg)</th></tr></thead><tbody id="calc-pcts"></tbody></table>
 </div>
+</div>
+<div class="set-section">
+<h3>🎯 Cíl programu</h3>
+<div class="goal-selector" id="goal-selector">
+<button class="goal-opt" data-goal="strength" onclick="changeGoal('strength')">Síla</button>
+<button class="goal-opt" data-goal="hypertrophy" onclick="changeGoal('hypertrophy')">Hypertrofie</button>
+<button class="goal-opt" data-goal="both" onclick="changeGoal('both')">Obojí</button>
+</div>
+<p class="goal-desc" id="goal-desc"></p>
 </div>
 <div class="set-section">
 <h3>⚙️ Moje 1RM maxima</h3>
@@ -1086,6 +1101,7 @@ function initApp() {
   document.getElementById('set-bp').value = S.settings.bp;
   document.getElementById('set-dl').value = S.settings.dl;
   document.getElementById('set-ohp').value = S.settings.ohp;
+  renderGoalSelector();
   renderWeek();
 }
 
@@ -1429,10 +1445,43 @@ function completeWorkout() {
   const nextDay = wk.days.findIndex((d, i) => i > S.cur.day && !S.history.some(h => h.key === S.cur.week + '-' + i));
   if (nextDay !== -1) {
     setTimeout(() => { selectDay(nextDay); }, 2000);
-  } else if (S.cur.week < program.length - 1) {
-    // All days done this week, advance to next week after delay
-    setTimeout(() => { navWeek(1); }, 2000);
+  } else {
+    // All days done this week. Check for end-of-block prompts.
+    const weekJustDone = wk.originalWeek;
+    const nextWk = program[S.cur.week + 1];
+    if (weekJustDone === 9 && nextWk && nextWk.originalWeek === 10 && !S.ob.testMode) {
+      setTimeout(promptTestMode, 1500);
+    } else if (weekJustDone === 11) {
+      setTimeout(promptRestart, 1500);
+    } else if (S.cur.week < program.length - 1) {
+      setTimeout(() => { navWeek(1); }, 2000);
+    }
   }
+}
+
+function promptTestMode() {
+  const msg = 'TÝDEN 9 HOTOV! 💪\n\nJaký typ max testu chceš absolvovat?\n\n' +
+    'OK  = 10A Rekreační (AMRAP na 90 %, cíl 3+ reps — pro lifting v pohodě)\n' +
+    'Cancel = 10B Soutěžní (opener/2./3. pokus na 1RM — pro powerlifting soutěž)';
+  const mode = confirm(msg) ? '10A' : '10B';
+  S.ob.testMode = mode;
+  save('onboarding', S.ob);
+  program = buildProgram(S.ob.freq, S.ob.goal);
+  navWeek(1);
+}
+
+function promptRestart() {
+  const msg = 'PROGRAM DOKONČEN! 🏆\n\n' +
+    '11-týdenní Powerbuilding blok je u konce.\n\n' +
+    'OK = spustit znovu (doporučujeme aktualizovat 1RM v Nastavení podle nového max testu)\n' +
+    'Cancel = zůstat na týdnu 11';
+  if (!confirm(msg)) return;
+  S.cur = { week: 0, day: 0 };
+  delete S.ob.testMode;
+  save('onboarding', S.ob);
+  save('current', S.cur);
+  program = buildProgram(S.ob.freq, S.ob.goal);
+  renderWeek();
 }
 
 // ==================== PREV LOG & OVERLOAD ====================
@@ -1657,6 +1706,30 @@ function save1RM() {
   S.settings.dl = parseFloat(document.getElementById('set-dl').value) || 0;
   S.settings.ohp = parseFloat(document.getElementById('set-ohp').value) || 0;
   save('settings', S.settings);
+  renderWeek();
+}
+
+const GOAL_DESC = {
+  strength: 'Jen liché týdny (1,3,5,7,9) + peak (10) + deload (11). Powerlifting zaměření: těžké Big 3, nízké repy, %1RM.',
+  hypertrophy: 'Jen sudé týdny (2,4,6,8) + deload (11). Bodybuilding zaměření: vyšší repy, RPE-based, víc izolace.',
+  both: 'Celý 11-týdenní blok (doporučeno) – střídání silového a hypertrofického týdne podle originálu Nippardova Powerbuildingu.'
+};
+function renderGoalSelector() {
+  const g = S.ob && S.ob.goal;
+  document.querySelectorAll('.goal-opt').forEach(b => b.classList.toggle('active', b.dataset.goal === g));
+  const desc = document.getElementById('goal-desc');
+  if (desc) desc.textContent = GOAL_DESC[g] || '';
+}
+function changeGoal(g) {
+  if (!S.ob || g === S.ob.goal) return;
+  if (!confirm('Změna cíle přerenderuje plán a vrátí tě na Týden 1. Dokončené tréninky a logy zůstanou zachované. Pokračovat?')) return;
+  S.ob.goal = g;
+  save('onboarding', S.ob);
+  S.cur = { week: 0, day: 0 };
+  save('current', S.cur);
+  program = buildProgram(S.ob.freq, S.ob.goal);
+  document.getElementById('prog-sub').textContent = S.ob.freq + ' týdně • ' + {strength:'Síla',hypertrophy:'Hypertrofie',both:'Síla + Hypertrofie'}[S.ob.goal];
+  renderGoalSelector();
   renderWeek();
 }
 
