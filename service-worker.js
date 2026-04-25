@@ -1,4 +1,4 @@
-const CACHE_NAME = 'powerbuilding-v1';
+const CACHE_NAME = 'powerbuilding-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -23,17 +23,17 @@ self.addEventListener('activate', e => {
   );
 });
 
+// Network-first: always try fresh content, fall back to cache when offline
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      const fetchPromise = fetch(e.request).then(response => {
+    fetch(e.request)
+      .then(response => {
         if (response && response.status === 200) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
         }
         return response;
-      }).catch(() => cached);
-      return cached || fetchPromise;
-    })
+      })
+      .catch(() => caches.match(e.request))
   );
 });
