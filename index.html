@@ -6962,7 +6962,7 @@
               const wuPrefill = wuWeights[s] || "";
               const wuRepPrefill = wuReps[s] || "";
               html += `<div class="set-row wu"><span class="set-label">Z${s + 1}</span>`;
-              html += `<input class="set-input${!wuLog.w && wuPrefill ? " prefilled" : ""}" type="number" inputmode="decimal" step="2.5" value="${wuLog.w || ""}" placeholder="${wuPrefill}" data-key="${wuKey}" data-field="w" onchange="logSet(this)" onfocus="if(!this.value&&${wuPrefill})this.value='${wuPrefill}'">`;
+              html += `<input class="set-input${!wuLog.w && wuPrefill ? " prefilled" : ""}" type="number" inputmode="decimal" step="2.5" value="${wuLog.w || wuPrefill || ""}" data-key="${wuKey}" data-field="w" onchange="logSet(this)">`;
               html += `<span class="set-unit">kg</span><span class="set-x">×</span>`;
               html += `<input class="set-input" type="number" inputmode="numeric" style="width:62px" value="${wuLog.r || ""}" placeholder="${wuRepPrefill}" data-key="${wuKey}" data-field="r" onchange="logSet(this)" onfocus="if(!this.value&&${wuRepPrefill})this.value='${wuRepPrefill}'">`;
               html += `<div class="set-check${wuLog.done ? " done" : ""}" data-key="${wuKey}" onclick="toggleWarmup(this)"></div></div>`;
@@ -6989,7 +6989,7 @@
             const skipTimer = isSSPair && isLastSet ? "1" : "0";
             const rpePlaceholder = ex.rpe || "";
             html += `<div class="set-row"><span class="set-label">${s + 1}</span>`;
-            html += `<input class="set-input${!sLog.w && prefill ? " prefilled" : ""}" type="number" inputmode="decimal" step="2.5" value="${sLog.w || ""}" data-key="${ei}-${s}" data-field="w" onchange="logSet(this)" onfocus="if(!this.value&&'${prefill}')this.value='${prefill}'" ${prefill && !sLog.w ? `placeholder="${prefill}"` : ""}>`;
+            html += `<input class="set-input${!sLog.w && prefill ? " prefilled" : ""}" type="number" inputmode="decimal" step="2.5" value="${sLog.w || prefill || ""}" data-key="${ei}-${s}" data-field="w" onchange="logSet(this)">`;
             html += `<span class="set-unit">kg</span><span class="set-x">×</span>`;
             html += `<input class="set-input" type="number" inputmode="numeric" placeholder="${prefillR || ex.reps}" style="width:58px" value="${sLog.r || ""}" data-key="${ei}-${s}" data-field="r" onchange="logSet(this)" onfocus="if(!this.value&&'${prefillR}')this.value='${prefillR}'">`;
             html += `<span class="rpe-at">@</span>`;
