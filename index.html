@@ -731,6 +731,7 @@
         border-radius: 8px;
         color: var(--txt);
         font-size: 17px;
+        font-weight: 600;
         text-align: center;
       }
       .set-input:focus {
@@ -738,6 +739,16 @@
       }
       .set-input.prefilled {
         color: var(--txt2);
+        font-weight: 400;
+        font-style: italic;
+      }
+      .set-input::placeholder,
+      .set-row .rpe-input::placeholder,
+      .set-field input::placeholder {
+        color: #555;
+        font-weight: 400;
+        font-style: italic;
+        opacity: 1;
       }
       .set-x {
         color: var(--txt2);
