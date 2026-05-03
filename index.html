@@ -7171,7 +7171,8 @@
       function completeWorkout() {
         const key = S.cur.week + "-" + S.cur.day;
         const day = program[S.cur.week].days[S.cur.day];
-        if (!S.history.some((h) => h.key === key)) {
+        const firstCompletion = !S.history.some((h) => h.key === key);
+        if (firstCompletion) {
           S.history.unshift({
             key,
             name: day.name,
@@ -7180,6 +7181,7 @@
           });
           if (S.history.length > 100) S.history.pop();
           save("history", S.history);
+          maybeUpdate1RMFromTest(day, S.logs[key] || {});
         }
         // Show success and re-render
         renderWeek();
@@ -7316,6 +7318,64 @@
             document.getElementById("pr-overlay").classList.remove("active"),
           3000,
         );
+      }
+
+      // ==================== AUTO 1RM UPDATE FROM TEST ====================
+      const TEST_LIFT_TO_SETTINGS = {
+        "Back Squat": "sq",
+        "Back Squat AMRAP": "sq",
+        "Barbell Bench Press": "bp",
+        "Barbell Bench Press AMRAP": "bp",
+        Deadlift: "dl",
+        "Deadlift AMRAP": "dl",
+      };
+      const SETTINGS_LIFT_LABEL = {
+        sq: "Squat",
+        bp: "Bench Press",
+        dl: "Deadlift",
+        ohp: "Overhead Press",
+      };
+
+      function estimate1RM(w, r) {
+        if (!w || !r) return 0;
+        // Singles use the lifted weight directly; Epley overestimates ~3% at r=1.
+        if (r === 1) return w;
+        return w * (1 + r / 30);
+      }
+
+      function maybeUpdate1RMFromTest(day, log) {
+        const wk = program[S.cur.week];
+        if (!wk || wk.type !== "testing") return;
+        const best = {};
+        day.exercises.forEach((ex, ei) => {
+          const settingsKey = TEST_LIFT_TO_SETTINGS[ex.name];
+          if (!settingsKey) return;
+          for (let s = 0; s < ex.working; s++) {
+            const sLog = log[ei + "-" + s];
+            if (!sLog || !sLog.done || !sLog.w || !sLog.r) continue;
+            const est = estimate1RM(sLog.w, sLog.r);
+            if (!best[settingsKey] || est > best[settingsKey].est) {
+              best[settingsKey] = { est, w: sLog.w, r: sLog.r };
+            }
+          }
+        });
+        Object.keys(best).forEach((settingsKey) => {
+          const b = best[settingsKey];
+          const newRm = Math.round(b.est * 2) / 2;
+          const cur = S.settings[settingsKey] || 0;
+          if (newRm <= cur) return;
+          const msg =
+            `Test ukázal nový odhadovaný 1RM pro ${SETTINGS_LIFT_LABEL[settingsKey]}:\n\n` +
+            `${newRm} kg  (z ${b.w} kg × ${b.r} ${b.r === 1 ? "rep" : "repů"})\n` +
+            `Aktuální tréninkový max: ${cur} kg\n\n` +
+            `Aktualizovat tréninkový max? Použije se pro % vah ve zbývajících trénincích a v dalším cyklu.`;
+          if (confirm(msg)) {
+            S.settings[settingsKey] = newRm;
+            save("settings", S.settings);
+            const inp = document.getElementById("set-" + settingsKey);
+            if (inp) inp.value = newRm;
+          }
+        });
       }
 
       // ==================== TIMER ====================
