@@ -1450,6 +1450,43 @@
               "
               id="calc-1rm"
             ></div>
+            <div
+              id="calc-warn"
+              style="
+                display: none;
+                font-size: 12px;
+                color: #c97a2b;
+                margin: 4px 0 8px;
+                line-height: 1.4;
+              "
+            >
+              ⚠️ Epley je nejpřesnější do ~10 repů; nad 10 repů odhad nadhodnocuje 1RM.
+            </div>
+            <p
+              style="
+                font-size: 12px;
+                color: var(--txt2);
+                margin: 10px 0 6px;
+              "
+            >
+              Použít jako můj 1RM pro:
+            </p>
+            <div
+              style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px"
+            >
+              <button class="btn btn-sm btn-ghost" onclick="applyCalc1RM('sq')">
+                Squat
+              </button>
+              <button class="btn btn-sm btn-ghost" onclick="applyCalc1RM('bp')">
+                Bench
+              </button>
+              <button class="btn btn-sm btn-ghost" onclick="applyCalc1RM('dl')">
+                Deadlift
+              </button>
+              <button class="btn btn-sm btn-ghost" onclick="applyCalc1RM('ohp')">
+                OHP
+              </button>
+            </div>
             <table class="pct-table">
               <thead>
                 <tr>
@@ -7602,10 +7639,12 @@
           document.getElementById("calc-result").style.display = "none";
           return;
         }
-        const orm = w * (1 + r / 30);
+        const orm = estimate1RM(w, r);
         document.getElementById("calc-result").style.display = "block";
         document.getElementById("calc-1rm").textContent =
           "Odhadované 1RM: " + Math.round(orm * 10) / 10 + " kg";
+        document.getElementById("calc-warn").style.display =
+          r > 10 ? "block" : "none";
         const pcts = [
           100, 95, 92.5, 90, 87.5, 85, 82.5, 80, 77.5, 75, 72.5, 70, 67.5, 65,
         ];
@@ -7615,6 +7654,25 @@
               `<tr><td>${p}%</td><td>${Math.round(((orm * p) / 100) * 2) / 2} kg</td></tr>`,
           )
           .join("");
+      }
+
+      function applyCalc1RM(key) {
+        const w = parseFloat(document.getElementById("calc-w").value);
+        const r = parseInt(document.getElementById("calc-r").value);
+        if (!w || !r) return;
+        const newRm = Math.round(estimate1RM(w, r) * 2) / 2;
+        const cur = S.settings[key] || 0;
+        const label = SETTINGS_LIFT_LABEL[key] || key;
+        if (
+          !confirm(
+            `Nastavit tréninkový max pro ${label} na ${newRm} kg?\nAktuální: ${cur} kg`,
+          )
+        )
+          return;
+        S.settings[key] = newRm;
+        save("settings", S.settings);
+        const inp = document.getElementById("set-" + key);
+        if (inp) inp.value = newRm;
       }
 
       function save1RM() {
