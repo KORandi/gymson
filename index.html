@@ -6926,6 +6926,7 @@
           const calcWeight = getCalcWeight(ex, ex.name);
           const prevLog =
             getPrevLog(displayName, key) || getPrevLog(ex.name, key);
+          const overloadInc = getOverloadIncrement(ex, prevLog);
           const overload = getOverloadSuggestion(ex, prevLog);
           html += `<div class="ex-card${isSS ? " ss" : ""}">`;
           html += `<div class="ex-hdr"><span class="ex-name">${displayName}</span><div class="ex-badges">`;
@@ -6973,12 +6974,21 @@
             isSS && nextEx && nextEx.ss && ex.ss[0] === nextEx.ss[0];
           for (let s = 0; s < ex.working; s++) {
             const sLog = log[`${ei}-${s}`] || {};
+            const prevW = prevLog && prevLog[s] ? prevLog[s].w : "";
+            const prevR = prevLog && prevLog[s] ? prevLog[s].r : "";
+            const overloadedW =
+              overloadInc && overloadInc.mode === "weight" && prevW
+                ? parseFloat(prevW) + overloadInc.inc
+                : prevW;
+            const overloadedR =
+              overloadInc && overloadInc.mode === "reps" && prevR
+                ? parseFloat(prevR) + overloadInc.inc
+                : prevR;
             const prefill =
               sLog.w ||
-              (prevLog && prevLog[s] ? prevLog[s].w : "") ||
+              overloadedW ||
               pickFromBracket(calcWeight, feelMode);
-            const prefillR =
-              sLog.r || (prevLog && prevLog[s] ? prevLog[s].r : "") || "";
+            const prefillR = sLog.r || overloadedR || "";
             const isDone = sLog.done;
             const isLastSet = s === ex.working - 1;
             const skipTimer = isSSPair && isLastSet ? "1" : "0";
@@ -7315,7 +7325,7 @@
           let found = false;
           for (let s = 0; s < 10; s++) {
             const k = histEi + "-" + s;
-            if (log[k] && log[k].w) {
+            if (log[k] && (log[k].w || log[k].r)) {
               result[s] = log[k];
               found = true;
             }
@@ -7325,24 +7335,38 @@
         return null;
       }
 
-      function getOverloadSuggestion(ex, prevLog) {
+      function getOverloadIncrement(ex, prevLog) {
         if (!prevLog || !ex.reps) return null;
         const repRange = String(ex.reps).split("-");
         if (repRange.length < 2) return null;
         const maxR = parseInt(repRange[1]);
+        if (!maxR) return null;
         let allMax = true;
+        let hadWeight = false;
         for (let s = 0; s < ex.working; s++) {
           if (!prevLog[s] || !prevLog[s].r || prevLog[s].r < maxR) {
             allMax = false;
             break;
           }
+          if (prevLog[s].w) hadWeight = true;
         }
         if (!allMax) return null;
+        if (!ex.pct && !hadWeight) {
+          return { mode: "reps", inc: 1 };
+        }
         const isUpper = ex.muscles.some((m) =>
           ["ch", "sh", "tr", "bi"].includes(m),
         );
-        const inc = isUpper ? 2.5 : 5;
-        return `Zvyš váhu o +${inc} kg (minule jsi zvládl/a max repy na všech sériích)`;
+        return { mode: "weight", inc: isUpper ? 2.5 : 5 };
+      }
+
+      function getOverloadSuggestion(ex, prevLog) {
+        const o = getOverloadIncrement(ex, prevLog);
+        if (!o) return null;
+        if (o.mode === "reps") {
+          return `Zvyš o +${o.inc} rep/sérii (minule jsi zvládl/a max repy na všech sériích)`;
+        }
+        return `Zvyš váhu o +${o.inc} kg (minule jsi zvládl/a max repy na všech sériích)`;
       }
 
       // ==================== PR TRACKING ====================
