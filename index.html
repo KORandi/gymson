@@ -7165,11 +7165,21 @@
         // Fill weight, reps and RPE from inputs if empty
         const row = el.parentElement;
         const inputs = row.querySelectorAll(".set-input");
-        if (done && inputs[0] && !S.logs[key][sk].w && inputs[0].value) {
-          S.logs[key][sk].w = parseFloat(inputs[0].value);
+        if (done && inputs[0] && !S.logs[key][sk].w) {
+          let w = parseFloat(inputs[0].value);
+          if (!w) {
+            w = 1;
+            inputs[0].value = w;
+          }
+          S.logs[key][sk].w = w;
         }
-        if (done && inputs[1] && !S.logs[key][sk].r && inputs[1].value) {
-          S.logs[key][sk].r = parseFloat(inputs[1].value);
+        if (done && inputs[1] && !S.logs[key][sk].r) {
+          let r = parseFloat(inputs[1].value);
+          if (!r) {
+            r = parseInt(String(inputs[1].placeholder || "").split("-")[0]) || 0;
+            if (r) inputs[1].value = r;
+          }
+          if (r) S.logs[key][sk].r = r;
         }
         const rpeInput = row.querySelector(".rpe-input");
         if (done && rpeInput && !S.logs[key][sk].rpe && rpeInput.value) {
